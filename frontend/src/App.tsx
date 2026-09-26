@@ -88,7 +88,11 @@ export default function App() {
     Promise.all([
       api.getRouteInfra(),
       api.listTiles(),
-      api.getRealRoute(),
+      // A route failure shouldn't take the tiles/map down with it.
+      api.getRealRoute().catch((e) => {
+        console.error("Route unavailable:", e);
+        return null;
+      }),
       api.listCustomBlocks(),
     ])
       .then(([infra, tileList, route, blocks]) => {
@@ -117,7 +121,9 @@ export default function App() {
   const toggleLayer = (key: SiteLayerKey) => setVisible((v) => ({ ...v, [key]: !v[key] }));
   const selectedTileInfo = tiles.find((t) => t.tile === selectedTile) ?? null;
   const firstBlockRows = tileMetrics?.blocks[0]?.rows ?? null;
-  const loaded = routeInfra && tiles.length > 0 && tileLayers && tileMetrics;
+  // With no tiles yet (fresh server, nothing uploaded) there's no tile to
+  // fetch layers for — the initial load is complete once the site data is in.
+  const loaded = routeInfra && (!selectedTile || (tileLayers && tileMetrics));
   const focusBounds = selectedTileInfo ? padBounds(selectedTileInfo.bounds, MIN_FOCUS_SIZE_M) : null;
 
   const startDraw = () => {
