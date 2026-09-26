@@ -1,0 +1,53 @@
+# --- Python / backend -------------------------------------------------
+backend/.venv/
+**/__pycache__/
+*.pyc
+
+# Derived rendering cache — regenerated on demand from tiles/ (georef.py),
+# no unique data, just wastes repo space (a few hundred MB of JPEGs).
+backend/app/data/real/_jpeg_cache/
+
+# Runtime state created by the app itself (hand-drawn block boundaries) —
+# starts empty on a fresh clone, custom_blocks.py handles the missing file.
+backend/app/data/real/custom_blocks.json
+
+# The 311 supplied GeoTIFF tiles (~368MB) — not committed for now; the
+# organizers also host these via their own cloud link/ZIP (see README for
+# where to fetch them). tile_catalog.py / georef.py just see an empty
+# directory on a fresh clone until they're placed back here.
+backend/app/data/real/tiles/
+
+# --- Node / frontend -----------------------------------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/test_*.mjs
+
+# --- Raw challenge asset archives (root) ---------------------------------
+# Original zips/orthomosaic as supplied by the organizers — their extracted,
+# structured contents already live under backend/app/data/real/{tiles,
+# examples,route}, which IS tracked. Keeping both would double the storage
+# for the same bytes. See README for where to re-fetch these if needed.
+*.zip
+/siret3_source_orthomosaic_EPSG4326.tif
+/Marcaj_Vineyard_AI_Visual_Journey.pdf
+/_incoming/
+
+# Generated deliverables — reproducible any time from the running app
+# (curl commands in README), not hand-authored, no need to version them.
+/route.geojson
+/measurements.csv
+
+# Design-reference screenshots pasted into chat, not part of the app
+/*.jpg
+/*.jpeg
+/*.png
+
+# --- Editors / OS ----------------------------------------------------------
+.idea/
+.vscode/
+.claude/
+.DS_Store
+
+# --- Logs -------------------------------------------------------------------
+*.log

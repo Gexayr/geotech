@@ -1,0 +1,24 @@
+# Local dev environments — rebuilt fresh inside the image
+backend/.venv/
+frontend/node_modules/
+frontend/dist/
+frontend/test_*.mjs
+
+# Python cruft
+**/__pycache__/
+**/*.pyc
+
+# Leftover scratch extraction (not used by the app; the tiles it contains
+# already live in backend/app/data/real/tiles/)
+_incoming/
+
+# Large source archives from the challenge assets — not needed at runtime,
+# only backend/app/data/real/{tiles,examples,route,auto_annotations} are.
+# Excluding these keeps the image a few hundred MB instead of 1.5GB+.
+*.zip
+siret3_source_orthomosaic_EPSG4326.tif
+Marcaj_Vineyard_AI_Visual_Journey.pdf
+
+.idea/
+.claude/
+*.log

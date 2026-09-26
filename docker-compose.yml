@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        APP_PORT: "9080"
+    ports:
+      - "9080:9080"
+    environment:
+      - APP_PORT=9080
