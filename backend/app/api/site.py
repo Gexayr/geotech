@@ -10,6 +10,7 @@ import csv
 import io
 import json
 import os
+import uuid
 
 import rasterio
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -17,7 +18,7 @@ from fastapi.responses import Response
 
 from app.data import real_site
 from app.schemas.geo import CustomBlockCreate, CustomRouteRequest, FeatureCollection
-from app.services import classical_cv, cvat_import, georef, real_metrics, tile_catalog
+from app.services import classical_cv, cvat_export, cvat_import, georef, real_metrics, tile_catalog
 from app.services import custom_blocks as custom_blocks_svc
 from app.services import measurements as measurements_svc
 from app.services import real_route as real_route_svc
@@ -103,6 +104,7 @@ async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
         raise HTTPException(status_code=422, detail=f"Max {MAX_UPLOAD_FILES} files per upload")
 
     results = []
+    batch_pixel_results: dict[str, dict] = {}  # this request's tiles only — for its own CVAT XML
     for f in files:
         name = f.filename or "unnamed.tif"
         if not name.lower().endswith((".tif", ".tiff")):
@@ -145,6 +147,8 @@ async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
         (georef.PNG_CACHE_DIR / f"{name}.jpg").unlink(missing_ok=True)
 
         pixel_result = classical_cv.process_tile(dest)
+        batch_pixel_results[name] = pixel_result
+
         tile_data = cvat_import.from_pixel_detection(name, pixel_result, source="uploaded")
         cvat_import.save_uploaded(name, tile_data)
         _tiles()[name] = tile_data  # merge into the live cache _tiles() already returned
@@ -159,7 +163,32 @@ async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
             }
         )
 
-    return {"results": results}
+    annotation_xml_url = None
+    if batch_pixel_results:
+        # One CVAT XML for exactly the tile(s) uploaded in THIS request — not
+        # the whole catalog — so it can be downloaded and re-imported (e.g.
+        # into a real Marcaj project) as a self-contained pre-annotation set.
+        xml_name = f"upload_{uuid.uuid4().hex[:12]}.xml"
+        cvat_export.write_cvat_xml(batch_pixel_results, cvat_import.UPLOADED_DIR / xml_name)
+        annotation_xml_url = f"/api/site/uploaded-annotations/{xml_name}"
+
+    return {"results": results, "annotation_xml_url": annotation_xml_url}
+
+
+@router.get("/uploaded-annotations/{filename}")
+def get_uploaded_annotation_xml(filename: str) -> Response:
+    """Downloads one upload request's CVAT XML (see /upload) — scoped to
+    just the tile(s) from that request, named upload_<id>.xml."""
+    if "/" in filename or not filename.endswith(".xml"):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    path = cvat_import.UPLOADED_DIR / filename
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Unknown annotation export")
+    return Response(
+        content=path.read_text(encoding="utf-8"),
+        media_type="application/xml",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.get("/tiles/{tile_name}/layers")

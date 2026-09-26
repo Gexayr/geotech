@@ -44,6 +44,9 @@ export const api = {
   tileImageUrl: (tile: string) =>
     `${BASE_URL}/api/site/tiles/${encodeURIComponent(tile)}/image.jpg`,
   getRealRoute: () => getJson<RealRouteResponse>("/api/site/route"),
+  // For turning a relative path the backend returned (e.g. an upload's
+  // annotation_xml_url) into a fetchable/clickable absolute URL.
+  apiUrl: (path: string) => `${BASE_URL}${path}`,
   uploadTiles: async (files: File[]) => {
     const form = new FormData();
     files.forEach((f) => form.append("files", f));
@@ -51,6 +54,7 @@ export const api = {
     if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
     return res.json() as Promise<{
       results: { filename: string; ok: boolean; error?: string; canopies?: number; rows?: number; interrows?: number }[];
+      annotation_xml_url: string | null;
     }>;
   },
   computeCustomRoute: async (params: {

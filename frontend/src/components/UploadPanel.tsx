@@ -15,6 +15,7 @@ export function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [results, setResults] = useState<UploadResult[] | null>(null);
+  const [xmlUrl, setXmlUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFiles = async (fileList: FileList | null) => {
@@ -27,9 +28,11 @@ export function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
     setError(null);
     setUploading(true);
     setResults(null);
+    setXmlUrl(null);
     try {
       const res = await api.uploadTiles(files);
       setResults(res.results);
+      setXmlUrl(res.annotation_xml_url);
       if (res.results.some((r) => r.ok)) onUploaded();
     } catch (e) {
       setError(String(e));
@@ -72,6 +75,17 @@ export function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {xmlUrl && (
+        <a
+          className="btn btn--ghost"
+          style={{ display: "block", textAlign: "center", textDecoration: "none", marginTop: 8 }}
+          href={api.apiUrl(xmlUrl)}
+          download
+        >
+          Download this upload's CVAT annotations.xml
+        </a>
       )}
     </div>
   );
