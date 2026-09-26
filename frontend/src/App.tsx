@@ -70,6 +70,9 @@ export default function App() {
   const [exportOpen, setExportOpen] = useState<ExportKind>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Mobile only: the side pane becomes a bottom sheet over a full-screen map.
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   const [drawMode, setDrawMode] = useState(false);
   const [draftPoints, setDraftPoints] = useState<[number, number][]>([]);
 
@@ -129,6 +132,7 @@ export default function App() {
   const startDraw = () => {
     setDraftPoints([]);
     setDrawMode(true);
+    setSheetOpen(false); // free the map for tapping points (mobile)
   };
   const cancelDraw = () => {
     setDrawMode(false);
@@ -147,10 +151,14 @@ export default function App() {
     setDraftPoints([]);
   };
 
-  const toggleStartMode = () => setStartMode((v) => !v);
+  const toggleStartMode = () => {
+    if (!startMode) setSheetOpen(false);
+    setStartMode(!startMode);
+  };
   const onStartClick = (p: [number, number]) => {
     setCustomStart(p);
     setStartMode(false);
+    setSheetOpen(true);
   };
   const resetStart = () => setCustomStart(null);
   const toggleTileScope = (tile: string) =>
@@ -228,7 +236,20 @@ export default function App() {
       {error && <div className="error-banner">Failed to reach backend API: {error}</div>}
 
       <div className="content">
-        <aside className="side-pane">
+        {sheetOpen && <div className="sheet-backdrop" onClick={() => setSheetOpen(false)} />}
+        <aside className={sheetOpen ? "side-pane side-pane--open" : "side-pane"}>
+          <div className="sheet-header">
+            <button
+              className="sheet-handle"
+              aria-label="Close controls"
+              onClick={() => setSheetOpen(false)}
+            />
+            <span>Controls</span>
+            <button className="sheet-close" aria-label="Close" onClick={() => setSheetOpen(false)}>
+              ×
+            </button>
+          </div>
+
           <TileSelector tiles={tiles} selected={selectedTile} onSelect={setSelectedTile} />
 
           <UploadPanel onUploaded={refreshTilesAfterUpload} />
@@ -371,6 +392,24 @@ export default function App() {
             customStart={customStart}
             onStartClick={onStartClick}
           />
+          {(drawMode || startMode) && (
+            <div className="map-hint">
+              {drawMode
+                ? `Tap the map to add points · ${draftPoints.length}`
+                : "Tap the map to set the start point"}
+              <button
+                onClick={() => {
+                  setStartMode(false);
+                  setSheetOpen(true);
+                }}
+              >
+                {drawMode ? "Done" : "Cancel"}
+              </button>
+            </div>
+          )}
+          <button className="sheet-toggle" onClick={() => setSheetOpen(true)}>
+            ☰ Controls
+          </button>
           <StatBar blocks={tileMetrics?.blocks ?? null} route={realRoute?.route ?? null} />
         </div>
       </div>
