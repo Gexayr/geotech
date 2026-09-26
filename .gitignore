@@ -34,11 +34,6 @@ frontend/tsconfig.tsbuildinfo
 /Marcaj_Vineyard_AI_Visual_Journey.pdf
 /_incoming/
 
-# Generated deliverables — reproducible any time from the running app
-# (curl commands in README), not hand-authored, no need to version them.
-/route.geojson
-/measurements.csv
-
 # Design-reference screenshots pasted into chat, not part of the app
 /*.jpg
 /*.jpeg
