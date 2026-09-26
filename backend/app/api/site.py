@@ -11,12 +11,13 @@ import io
 import json
 import os
 
-from fastapi import APIRouter, HTTPException
+import rasterio
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from app.data import real_site
 from app.schemas.geo import CustomBlockCreate, CustomRouteRequest, FeatureCollection
-from app.services import cvat_import, georef, real_metrics, tile_catalog
+from app.services import classical_cv, cvat_import, georef, real_metrics, tile_catalog
 from app.services import custom_blocks as custom_blocks_svc
 from app.services import measurements as measurements_svc
 from app.services import real_route as real_route_svc
@@ -82,6 +83,81 @@ def list_tiles() -> list[dict]:
         }
         for name, bounds in tile_catalog.get_catalog().items()
     ]
+
+
+MAX_UPLOAD_FILES = 5
+MAX_UPLOAD_MB = 50
+
+
+@router.post("/upload")
+async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
+    """Operator-supplied GeoTIFF tiles: saved next to the 311 supplied ones,
+    detected on the spot with the same classical-CV fallback used for those
+    (see app/services/classical_cv.py — no route, since a walking route
+    needs passages/forbidden zones this field doesn't have). Georeferencing
+    is mandatory: a tile with no CRS can't be placed on the map or measured
+    in real units, so it's rejected rather than accepted in a degraded mode.
+    """
+    if len(files) > MAX_UPLOAD_FILES:
+        raise HTTPException(status_code=422, detail=f"Max {MAX_UPLOAD_FILES} files per upload")
+
+    results = []
+    for f in files:
+        name = f.filename or "unnamed.tif"
+        if not name.lower().endswith((".tif", ".tiff")):
+            results.append({"filename": name, "ok": False, "error": "Not a .tif/.tiff file"})
+            continue
+
+        content = await f.read()
+        if len(content) > MAX_UPLOAD_MB * 1024 * 1024:
+            results.append(
+                {"filename": name, "ok": False, "error": f"Exceeds {MAX_UPLOAD_MB}MB limit"}
+            )
+            continue
+
+        dest = tile_catalog.TILES_DIR / name
+        dest.write_bytes(content)
+
+        try:
+            with rasterio.open(dest) as ds:
+                has_crs = ds.crs is not None
+        except Exception as exc:  # noqa: BLE001 — surfaced to the operator, not a bug
+            dest.unlink(missing_ok=True)
+            results.append({"filename": name, "ok": False, "error": f"Not a valid GeoTIFF: {exc}"})
+            continue
+
+        if not has_crs:
+            dest.unlink(missing_ok=True)
+            results.append(
+                {
+                    "filename": name,
+                    "ok": False,
+                    "error": "No CRS/geotransform in this file — can't place it on the map "
+                    "or measure it in real units.",
+                }
+            )
+            continue
+
+        tile_catalog.invalidate()
+        georef._transform_cache.pop(name, None)
+        georef._bounds_cache.pop(name, None)
+        (georef.PNG_CACHE_DIR / f"{name}.jpg").unlink(missing_ok=True)
+
+        pixel_result = classical_cv.process_tile(dest)
+        tile_data = cvat_import.from_pixel_detection(name, pixel_result, source="uploaded")
+        _tiles()[name] = tile_data  # merge into the live cache _tiles() already returned
+
+        results.append(
+            {
+                "filename": name,
+                "ok": True,
+                "canopies": len(tile_data["canopies"]),
+                "rows": len(tile_data["rows"]),
+                "interrows": len(tile_data["interrows"]),
+            }
+        )
+
+    return {"results": results}
 
 
 @router.get("/tiles/{tile_name}/layers")

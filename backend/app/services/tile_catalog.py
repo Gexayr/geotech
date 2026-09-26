@@ -37,3 +37,10 @@ def get_catalog() -> dict[str, tuple[float, float, float, float]]:
 
 def tile_exists(name: str) -> bool:
     return name in get_catalog()
+
+
+def invalidate() -> None:
+    """Forces the next get_catalog() call to rescan TILES_DIR — call after
+    saving a newly-uploaded tile there."""
+    global _catalog_cache
+    _catalog_cache = None

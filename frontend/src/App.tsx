@@ -11,6 +11,7 @@ import { DrawBlockPanel } from "./components/DrawBlockPanel";
 import { RoutePlanner } from "./components/RoutePlanner";
 import { LayerChipBar } from "./components/LayerChipBar";
 import { StatBar } from "./components/StatBar";
+import { UploadPanel } from "./components/UploadPanel";
 import type {
   RouteInfraResponse,
   TileSummary,
@@ -189,6 +190,17 @@ export default function App() {
     }
   };
 
+  const refreshTilesAfterUpload = async () => {
+    try {
+      const tileList = await api.listTiles();
+      setTiles(tileList);
+      const uploaded = tileList.filter((t) => t.source === "uploaded");
+      if (uploaded.length > 0) setSelectedTile(uploaded[uploaded.length - 1].tile);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   return (
     <div className="app">
       <header className="topbar">
@@ -212,6 +224,8 @@ export default function App() {
       <div className="content">
         <aside className="side-pane">
           <TileSelector tiles={tiles} selected={selectedTile} onSelect={setSelectedTile} />
+
+          <UploadPanel onUploaded={refreshTilesAfterUpload} />
 
           <SiteLayerPanel visible={visible} onToggle={toggleLayer} />
 

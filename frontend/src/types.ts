@@ -78,7 +78,7 @@ export interface TileSummary {
   bounds: [number, number, number, number]; // [x0, y0, x1, y1] local metres
   vineyard_ids: string[];
   annotated: boolean;
-  source: "ground_truth" | "classical_cv" | null;
+  source: "ground_truth" | "classical_cv" | "uploaded" | null;
 }
 
 export interface CustomBlock {

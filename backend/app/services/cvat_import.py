@@ -52,6 +52,52 @@ def tile_bounds_local(tile_name: str) -> tuple[float, float, float, float]:
     return (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
 
 
+def from_pixel_detection(tile_name: str, pixel_result: dict, source: str) -> dict[str, Any]:
+    """Converts app.services.classical_cv.process_tile()'s pixel-space
+    output into our internal per-tile format (local-plane coords) — the
+    live counterpart to _parse_cvat_file, for a tile detected on the fly
+    (upload) rather than parsed from a CVAT XML on disk."""
+    canopies = []
+    for c in pixel_result["canopies"]:
+        ring = _pixel_ring_to_local(tile_name, c["points"])
+        if ring[0] != ring[-1]:
+            ring.append(ring[0])
+        canopies.append({"polygon": ring, "vineyard_id": c["vineyard_id"]})
+
+    rows = []
+    for r in pixel_result["rows"]:
+        rows.append(
+            {
+                "line": _pixel_ring_to_local(tile_name, r["points"]),
+                "vineyard_id": r["vineyard_id"],
+                "row_id": r["row_id"],
+                "row_structure": r["row_structure"],
+            }
+        )
+
+    interrows = []
+    for ir in pixel_result["interrows"]:
+        ring = _pixel_ring_to_local(tile_name, ir["points"])
+        if ring[0] != ring[-1]:
+            ring.append(ring[0])
+        interrows.append(
+            {
+                "polygon": ring,
+                "vineyard_id": ir["vineyard_id"],
+                "interrow_cover": ir["interrow_cover"],
+            }
+        )
+
+    return {
+        "canopies": canopies,
+        "rows": rows,
+        "interrows": interrows,
+        "waste": [],
+        "bounds": tile_bounds_local(tile_name),
+        "source": source,
+    }
+
+
 def _parse_cvat_file(xml_path: Path, source: str) -> dict[str, dict[str, Any]]:
     """Returns {tile_name: {canopies, rows, interrows, waste, bounds, source}}.
     `source` tags every tile from this file so callers (and the UI) can tell

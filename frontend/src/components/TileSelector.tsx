@@ -21,12 +21,13 @@ export function TileSelector({ tiles, selected, onSelect }: Props) {
             {t.vineyard_ids.length > 0 ? ` — ${t.vineyard_ids.join(", ")}` : ""}
             {t.source === "ground_truth" ? " (ground truth)" : ""}
             {t.source === "classical_cv" ? " (auto CV)" : ""}
+            {t.source === "uploaded" ? " (your upload)" : ""}
           </option>
         ))}
       </select>
       <div className="route-note">
-        {tiles.length} of 311 real tiles annotated here (example set) — click a dashed
-        rectangle on the map to switch.
+        {tiles.length} tiles in the catalog — click a dashed rectangle on the map to
+        switch.
       </div>
     </div>
   );

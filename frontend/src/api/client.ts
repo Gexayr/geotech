@@ -44,6 +44,15 @@ export const api = {
   tileImageUrl: (tile: string) =>
     `${BASE_URL}/api/site/tiles/${encodeURIComponent(tile)}/image.jpg`,
   getRealRoute: () => getJson<RealRouteResponse>("/api/site/route"),
+  uploadTiles: async (files: File[]) => {
+    const form = new FormData();
+    files.forEach((f) => form.append("files", f));
+    const res = await fetch(`${BASE_URL}/api/site/upload`, { method: "POST", body: form });
+    if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+    return res.json() as Promise<{
+      results: { filename: string; ok: boolean; error?: string; canopies?: number; rows?: number; interrows?: number }[];
+    }>;
+  },
   computeCustomRoute: async (params: {
     start?: [number, number];
     tiles?: string[];
