@@ -16,6 +16,7 @@ backend/app/data/real/custom_blocks.json
 # where to fetch them). tile_catalog.py / georef.py just see an empty
 # directory on a fresh clone until they're placed back here.
 backend/app/data/real/tiles/
+backend/app/data/real/uploaded_annotations/
 
 # --- Node / frontend -----------------------------------------------------
 frontend/node_modules/

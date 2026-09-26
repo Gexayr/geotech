@@ -12,6 +12,7 @@ one map.
 
 from __future__ import annotations
 
+import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,9 @@ from app.services import georef
 GROUND_TRUTH_PATH = Path(__file__).parent.parent / "data" / "real" / "examples" / "annotations.xml"
 FALLBACK_PATH = Path(__file__).parent.parent / "data" / "real" / "auto_annotations" / "annotations.xml"
 XML_PATH = GROUND_TRUTH_PATH  # kept for backward compatibility
+# Annotations detected for operator-uploaded tiles (one JSON per tile), so
+# they survive restarts — the uploaded GeoTIFFs themselves live in TILES_DIR.
+UPLOADED_DIR = Path(__file__).parent.parent / "data" / "real" / "uploaded_annotations"
 
 
 def _parse_points(raw: str) -> list[tuple[float, float]]:
@@ -109,6 +113,8 @@ def _parse_cvat_file(xml_path: Path, source: str) -> dict[str, dict[str, Any]]:
 
     for image_el in root.findall("image"):
         tile_name = image_el.get("name")
+        if not georef.tile_path(tile_name).exists():
+            continue  # annotated tile whose GeoTIFF isn't on disk — can't georeference it
         canopies: list[dict[str, Any]] = []
         rows: list[dict[str, Any]] = []
         interrows: list[dict[str, Any]] = []
@@ -169,4 +175,27 @@ def load_merged() -> dict[str, dict[str, Any]]:
     if FALLBACK_PATH.exists():
         tiles.update(_parse_cvat_file(FALLBACK_PATH, source="classical_cv"))
     tiles.update(_parse_cvat_file(GROUND_TRUTH_PATH, source="ground_truth"))
+    return tiles
+
+
+def save_uploaded(tile_name: str, tile_data: dict[str, Any]) -> None:
+    UPLOADED_DIR.mkdir(parents=True, exist_ok=True)
+    with open(UPLOADED_DIR / f"{tile_name}.json", "w", encoding="utf-8") as f:
+        json.dump(tile_data, f, default=float)
+
+
+def load_uploaded() -> dict[str, dict[str, Any]]:
+    """Annotations saved by save_uploaded(), for tiles whose GeoTIFF is
+    still on disk."""
+    tiles = {}
+    if not UPLOADED_DIR.exists():
+        return tiles
+    for path in sorted(UPLOADED_DIR.glob("*.json")):
+        tile_name = path.stem
+        if not georef.tile_path(tile_name).exists():
+            continue
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        data["bounds"] = tuple(data["bounds"])
+        tiles[tile_name] = data
     return tiles

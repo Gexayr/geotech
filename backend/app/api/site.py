@@ -45,6 +45,7 @@ def _tiles() -> dict:
         _annotated_cache = (
             cvat_import.load_merged() if _cv_fallback_enabled() else cvat_import.load_examples()
         )
+        _annotated_cache.update(cvat_import.load_uploaded())
     return _annotated_cache
 
 
@@ -145,6 +146,7 @@ async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
 
         pixel_result = classical_cv.process_tile(dest)
         tile_data = cvat_import.from_pixel_detection(name, pixel_result, source="uploaded")
+        cvat_import.save_uploaded(name, tile_data)
         _tiles()[name] = tile_data  # merge into the live cache _tiles() already returned
 
         results.append(

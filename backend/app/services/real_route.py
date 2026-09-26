@@ -128,6 +128,19 @@ def compute_real_route(
     dist, paths = _pairwise_paths(grid, nodes)
     order, length_m = _best_order(dist, len(target_list))
 
+    # Some target has no walkable path from the start (e.g. an uploaded tile
+    # not connected to the passage network) — every tour length is infinite.
+    if not order or math.isinf(length_m):
+        return {
+            "targets": target_list,
+            "route": None,
+            "message": (
+                "Some inspection targets can't be reached from the start point over the "
+                "walkable network (passages / inter-row areas). Scope the route to "
+                "connected tiles, or move the start point."
+            ),
+        }
+
     route_indices = [0, *order, 0]
     polyline_xy: list[list[float]] = []
     for k in range(len(route_indices) - 1):

@@ -19,7 +19,8 @@ _catalog_cache: dict[str, tuple[float, float, float, float]] | None = None
 
 def _scan() -> dict[str, tuple[float, float, float, float]]:
     catalog: dict[str, tuple[float, float, float, float]] = {}
-    for path in sorted(TILES_DIR.glob("*.tif")):
+    paths = [p for p in TILES_DIR.glob("*") if p.suffix.lower() in (".tif", ".tiff")]
+    for path in sorted(paths):
         with rasterio.open(path) as ds:
             b = ds.bounds
         x0, y0 = real_site.to_local(b.left, b.bottom)
