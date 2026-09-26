@@ -109,16 +109,20 @@ export default function App() {
       .catch((e) => setError(String(e)));
   }, []);
 
-  useEffect(() => {
-    if (!selectedTile) return;
+  const loadTileDetails = (tileName: string) => {
     setTileLayers(null);
     setTileMetrics(null);
-    Promise.all([api.getTileLayers(selectedTile), api.getTileMetrics(selectedTile)])
+    Promise.all([api.getTileLayers(tileName), api.getTileMetrics(tileName)])
       .then(([layers, metrics]) => {
         setTileLayers(layers);
         setTileMetrics(metrics);
       })
       .catch((e) => setError(String(e)));
+  };
+
+  useEffect(() => {
+    if (!selectedTile) return;
+    loadTileDetails(selectedTile);
   }, [selectedTile]);
 
   const toggleLayer = (key: SiteLayerKey) => setVisible((v) => ({ ...v, [key]: !v[key] }));
@@ -204,12 +208,33 @@ export default function App() {
     }
   };
 
-  const refreshTilesAfterUpload = async () => {
+  const refreshTilesAfterUpload = async (uploadedFilenames: string[]) => {
     try {
-      const tileList = await api.listTiles();
+      const [tileList, route] = await Promise.all([
+        api.listTiles(),
+        // New disrupted-row/waste targets from the upload feed the Targets
+        // layer too — without this it only updates on a full page reload.
+        api.getRealRoute().catch((e) => {
+          console.error("Route refresh after upload failed:", e);
+          return null;
+        }),
+      ]);
       setTiles(tileList);
-      const uploaded = tileList.filter((t) => t.source === "uploaded");
-      if (uploaded.length > 0) setSelectedTile(uploaded[uploaded.length - 1].tile);
+      if (route) setRealRoute(route);
+      // Select by the exact filenames just uploaded, not by re-deriving
+      // "the uploaded tile" from a re-fetched (alphabetically sorted) list —
+      // that broke as soon as more than one upload had ever happened.
+      if (uploadedFilenames.length > 0) {
+        const latest = uploadedFilenames[uploadedFilenames.length - 1];
+        if (latest === selectedTile) {
+          // Re-uploading the same filename overwrites its detection, but
+          // `selectedTile` doesn't change value, so the effect watching it
+          // won't re-fire on its own — load its (now different) data directly.
+          loadTileDetails(latest);
+        } else {
+          setSelectedTile(latest);
+        }
+      }
     } catch (e) {
       setError(String(e));
     }

@@ -11,7 +11,7 @@ interface UploadResult {
   rows?: number;
 }
 
-export function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
+export function UploadPanel({ onUploaded }: { onUploaded: (uploadedFilenames: string[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [results, setResults] = useState<UploadResult[] | null>(null);
@@ -33,7 +33,8 @@ export function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
       const res = await api.uploadTiles(files);
       setResults(res.results);
       setXmlUrl(res.annotation_xml_url);
-      if (res.results.some((r) => r.ok)) onUploaded();
+      const okNames = res.results.filter((r) => r.ok).map((r) => r.filename);
+      if (okNames.length > 0) onUploaded(okNames);
     } catch (e) {
       setError(String(e));
     } finally {
