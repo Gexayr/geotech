@@ -242,8 +242,33 @@ body {
   overflow-y: auto;
 }
 
+.tile-select-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tile-delete {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 20px;
+}
+
+.tile-delete:disabled {
+  cursor: default;
+}
+
+.tile-delete .spinner {
+  margin: 0;
+}
+
 .tile-select {
   width: 100%;
+  min-width: 0;
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid var(--border-strong);
@@ -322,6 +347,12 @@ body {
   background: var(--bg-panel-alt) !important;
 }
 
+.leaflet-bar a.center-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .leaflet-control-attribution {
   background: rgba(21, 26, 23, 0.75) !important;
   color: var(--text-muted) !important;
@@ -356,6 +387,24 @@ body {
   font-size: 12px;
   color: var(--text-secondary);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .stat-grid-loading {
@@ -604,6 +653,31 @@ body {
 
 .modal-actions .btn {
   flex: none;
+}
+
+.modal--confirm {
+  width: min(420px, 100%);
+}
+
+.modal-message {
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.modal--confirm .modal-actions {
+  justify-content: flex-end;
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: #1a0b0b;
+}
+
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(1.1);
 }
 
 /* --- chip bar (over the map) ----------------------------------------------- */
@@ -874,8 +948,12 @@ body {
     transform: none;
   }
 
+  /* Fixed and above the bottom sheet (1100) + its backdrop, so a delete or
+     route compute started from the open sheet still shows its spinner. */
   .map-loading {
-    top: 56px;
+    position: fixed;
+    z-index: 1150;
+    top: calc(max(8px, env(safe-area-inset-top)) + 58px);
     white-space: nowrap;
   }
 
@@ -939,6 +1017,11 @@ body {
     font-size: 20px;
   }
 
+  .tile-delete {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .row-table tbody tr:hover {
     background: none;
   }
@@ -956,8 +1039,13 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  .modal--confirm {
+    width: 100%;
+  }
+
   .modal-header,
   .modal-body,
+  .modal-message,
   .modal-actions {
     padding-left: 14px;
     padding-right: 14px;

@@ -353,6 +353,22 @@ def delete_custom_block(block_id: str) -> dict:
     return {"deleted": block_id}
 
 
+@router.delete("/tiles/{tile_name}")
+def delete_tile(tile_name: str) -> dict:
+    """Removes a tile's GeoTIFF plus everything derived from it (saved
+    upload detections, cached JPEG, in-memory caches). Validated against the
+    catalog first, so tile_name is always a real file in TILES_DIR."""
+    _require_real_tile(tile_name)
+    (tile_catalog.TILES_DIR / tile_name).unlink(missing_ok=True)
+    (cvat_import.UPLOADED_DIR / f"{tile_name}.json").unlink(missing_ok=True)
+    (georef.PNG_CACHE_DIR / f"{tile_name}.jpg").unlink(missing_ok=True)
+    georef._transform_cache.pop(tile_name, None)
+    georef._bounds_cache.pop(tile_name, None)
+    tile_catalog.invalidate()
+    _tiles().pop(tile_name, None)
+    return {"deleted": tile_name}
+
+
 @router.get("/tiles/{tile_name}/image.jpg")
 def get_tile_image(tile_name: str) -> Response:
     _require_real_tile(tile_name)

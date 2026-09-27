@@ -7,6 +7,7 @@ import { TileSelector } from "./components/TileSelector";
 import { RouteStatus } from "./components/RouteStatus";
 import { RowTable } from "./components/RowTable";
 import { ExportModal } from "./components/ExportModal";
+import { ConfirmModal } from "./components/ConfirmModal";
 import { DrawBlockPanel } from "./components/DrawBlockPanel";
 import { RoutePlanner } from "./components/RoutePlanner";
 import { LayerChipBar } from "./components/LayerChipBar";
@@ -94,6 +95,13 @@ export default function App() {
   const [scopeAreaId, setScopeAreaId] = useState<string | null>(null);
   const [isCustomRoute, setIsCustomRoute] = useState(false);
   const [computingRoute, setComputingRoute] = useState(false);
+  // Label for whatever slow server action is in flight (delete, compute…) —
+  // shown as a spinner pill on the map so the user knows to wait.
+  const [busy, setBusy] = useState<string | null>(null);
+  // A delete waiting for the user's OK in the confirm modal.
+  const [pendingDelete, setPendingDelete] = useState<
+    { kind: "tile" | "area"; id: string; label: string } | null
+  >(null);
   const [lastComputeResult, setLastComputeResult] = useState<{
     found: boolean;
     message: string | null;
@@ -170,10 +178,15 @@ export default function App() {
   };
   const saveDraft = async (vineyardId: string) => {
     const ring = [...draftPoints, draftPoints[0]];
-    const saved = await api.createCustomBlock(vineyardId, ring);
-    setCustomBlocks((blocks) => [...blocks, saved]);
-    setDrawMode(false);
-    setDraftPoints([]);
+    setBusy("Saving area…");
+    try {
+      const saved = await api.createCustomBlock(vineyardId, ring);
+      setCustomBlocks((blocks) => [...blocks, saved]);
+      setDrawMode(false);
+      setDraftPoints([]);
+    } finally {
+      setBusy(null);
+    }
   };
 
   const toggleStartMode = () => {
@@ -191,6 +204,7 @@ export default function App() {
 
   const computeRoute = async () => {
     setComputingRoute(true);
+    setBusy("Computing route…");
     try {
       const area = scopeAreaId
         ? customBlocks.find((b) => b.id === scopeAreaId)?.polygon
@@ -207,13 +221,21 @@ export default function App() {
       setError(String(e));
     } finally {
       setComputingRoute(false);
+      setBusy(null);
     }
   };
 
   const deleteCustomBlock = async (id: string) => {
-    await api.deleteCustomBlock(id);
-    setCustomBlocks((blocks) => blocks.filter((b) => b.id !== id));
-    if (scopeAreaId === id) setScopeAreaId(null);
+    setBusy("Deleting area…");
+    try {
+      await api.deleteCustomBlock(id);
+      setCustomBlocks((blocks) => blocks.filter((b) => b.id !== id));
+      if (scopeAreaId === id) setScopeAreaId(null);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(null);
+    }
   };
 
   const resetRouteToDefault = async () => {
@@ -222,10 +244,13 @@ export default function App() {
     setScopeAreaId(null);
     setIsCustomRoute(false);
     setLastComputeResult(null);
+    setBusy("Resetting route…");
     try {
       setRealRoute(await api.getRealRoute());
     } catch (e) {
       setError(String(e));
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -258,6 +283,33 @@ export default function App() {
       }
     } catch (e) {
       setError(String(e));
+    }
+  };
+
+  const deleteTile = async (tileName: string) => {
+    setBusy("Deleting tile…");
+    try {
+      await api.deleteTile(tileName);
+      const [tileList, route] = await Promise.all([
+        api.listTiles(),
+        // The deleted tile's targets must drop out of the route too.
+        api.getRealRoute().catch((e) => {
+          console.error("Route refresh after delete failed:", e);
+          return null;
+        }),
+      ]);
+      setTiles(tileList);
+      if (route) setRealRoute(route);
+      const next = tileList.find((t) => t.annotated) ?? tileList[0] ?? null;
+      if (!next) {
+        setTileLayers(null);
+        setTileMetrics(null);
+      }
+      setSelectedTile(next ? next.tile : null);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -296,7 +348,13 @@ export default function App() {
             </button>
           </div>
 
-          <TileSelector tiles={tiles} selected={selectedTile} onSelect={setSelectedTile} />
+          <TileSelector
+            tiles={tiles}
+            selected={selectedTile}
+            onSelect={setSelectedTile}
+            onDelete={(tile) => setPendingDelete({ kind: "tile", id: tile, label: tile })}
+            deleting={busy === "Deleting tile…"}
+          />
 
           <UploadPanel onUploaded={refreshTilesAfterUpload} />
 
@@ -304,45 +362,48 @@ export default function App() {
 
           <SiteMetricsPanel blocks={tileMetrics?.blocks ?? null} />
 
+          <RouteStatus routeInfra={routeInfra} realRoute={realRoute} />
+
+          <RoutePlanner
+            annotatedTiles={tiles.filter((t) => t.source === "ground_truth")}
+            customBlocks={customBlocks}
+            customStart={customStart}
+            startMode={startMode}
+            onToggleStartMode={toggleStartMode}
+            onResetStart={resetStart}
+            selectedTileScope={scopeTiles}
+            onToggleTileScope={toggleTileScope}
+            selectedAreaId={scopeAreaId}
+            onSelectArea={setScopeAreaId}
+            onCompute={computeRoute}
+            onResetToDefault={resetRouteToDefault}
+            isCustomRoute={isCustomRoute}
+            computing={computingRoute}
+            lastResult={lastComputeResult}
+          />
+
           {role === "farmer" ? (
-            <>
-              <RouteStatus routeInfra={routeInfra} realRoute={realRoute} />
-
-              <RoutePlanner
-                annotatedTiles={tiles.filter((t) => t.source === "ground_truth")}
-                customBlocks={customBlocks}
-                customStart={customStart}
-                startMode={startMode}
-                onToggleStartMode={toggleStartMode}
-                onResetStart={resetStart}
-                selectedTileScope={scopeTiles}
-                onToggleTileScope={toggleTileScope}
-                selectedAreaId={scopeAreaId}
-                onSelectArea={setScopeAreaId}
-                onCompute={computeRoute}
-                onResetToDefault={resetRouteToDefault}
-                isCustomRoute={isCustomRoute}
-                computing={computingRoute}
-                lastResult={lastComputeResult}
-              />
-
-              <DrawBlockPanel
-                drawMode={drawMode}
-                pointCount={draftPoints.length}
-                onStart={startDraw}
-                onUndo={undoPoint}
-                onCancel={cancelDraw}
-                onSave={saveDraft}
-                customBlocks={customBlocks}
-                onDelete={deleteCustomBlock}
-              />
-            </>
+            <DrawBlockPanel
+              drawMode={drawMode}
+              pointCount={draftPoints.length}
+              onStart={startDraw}
+              onUndo={undoPoint}
+              onCancel={cancelDraw}
+              onSave={saveDraft}
+              customBlocks={customBlocks}
+              onDelete={(id) =>
+                setPendingDelete({
+                  kind: "area",
+                  id,
+                  label: customBlocks.find((b) => b.id === id)?.vineyard_id ?? id,
+                })
+              }
+            />
           ) : (
             <div className="panel">
               <h3>Auditor view</h3>
               <div className="route-note">
-                Route planning is hidden in this view — verify block/row counts and areas
-                below, then export the audit trail.
+                Verify block/row counts and areas below, then export the audit trail.
               </div>
             </div>
           )}
@@ -422,7 +483,12 @@ export default function App() {
         </aside>
 
         <div className="map-pane">
-          {!loaded && !error && <div className="map-loading">Loading real site data…</div>}
+          {(busy || (!loaded && !error)) && (
+            <div className="map-loading" role="status">
+              <span className="spinner" />
+              {busy ?? "Loading real site data…"}
+            </div>
+          )}
           <LayerChipBar visible={visible} onToggle={toggleLayer} />
           <SiteMap
             routeInfra={routeInfra}
@@ -464,6 +530,24 @@ export default function App() {
         </div>
       </div>
 
+      {pendingDelete && (
+        <ConfirmModal
+          title={pendingDelete.kind === "tile" ? "Delete tile?" : "Delete area?"}
+          message={
+            pendingDelete.kind === "tile"
+              ? `${pendingDelete.label} — the GeoTIFF and its detections will be permanently removed from the server.`
+              : `${pendingDelete.label} — this drawn area will be permanently removed.`
+          }
+          confirmLabel="Delete"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            const { kind, id } = pendingDelete;
+            setPendingDelete(null);
+            if (kind === "tile") deleteTile(id);
+            else deleteCustomBlock(id);
+          }}
+        />
+      )}
       {exportOpen === "annotations" && tileLayers && (
         <ExportModal
           title={`Real annotations — ${selectedTile}`}

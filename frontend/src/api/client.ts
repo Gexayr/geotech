@@ -57,6 +57,12 @@ export const api = {
       annotation_xml_url: string | null;
     }>;
   },
+  deleteTile: async (tile: string) => {
+    const res = await fetch(`${BASE_URL}/api/site/tiles/${encodeURIComponent(tile)}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error(`Failed to delete tile: ${res.status}`);
+  },
   computeCustomRoute: async (params: {
     start?: [number, number];
     tiles?: string[];

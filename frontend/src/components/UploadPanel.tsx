@@ -62,7 +62,11 @@ export function UploadPanel({ onUploaded }: { onUploaded: (uploadedFilenames: st
         style={{ fontSize: 12, color: "var(--text-secondary)" }}
       />
 
-      {uploading && <div className="route-note--strong" style={{ marginTop: 8 }}>Uploading & detecting…</div>}
+      {uploading && (
+        <div className="route-note--strong" style={{ marginTop: 8 }}>
+          <span className="spinner" /> Uploading & detecting…
+        </div>
+      )}
       {error && <div className="route-result route-result--warn">{error}</div>}
 
       {results && (

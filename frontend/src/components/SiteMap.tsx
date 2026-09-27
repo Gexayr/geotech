@@ -12,7 +12,15 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-import { CRS, canvas, LatLngExpression, LatLngBoundsExpression } from "leaflet";
+import {
+  CRS,
+  canvas,
+  Control,
+  DomEvent,
+  DomUtil,
+  LatLngExpression,
+  LatLngBoundsExpression,
+} from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type {
   RouteInfraResponse,
@@ -65,6 +73,47 @@ function FitToBounds({ bounds }: { bounds: [number, number, number, number] }) {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bounds.join(","), map]);
+  return null;
+}
+
+// CRS.Simple: zoom 0 = 1 m/px, which is where the scale bar reads 100 m.
+const CENTER_ZOOM = 0;
+
+const CROSSHAIR_SVG =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+  '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>' +
+  '<path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+
+/** A native Leaflet button under the +/- zoom control that recenters the
+ * map on `target` (the selected tile, or the site) at the 100 m scale. */
+function CenterControl({ target }: { target: [number, number] }) {
+  const map = useMap();
+  // The control is built once; read the latest target at click time.
+  const targetRef = useRef(target);
+  targetRef.current = target;
+
+  useEffect(() => {
+    const control = new Control({ position: "topleft" });
+    control.onAdd = () => {
+      const bar = DomUtil.create("div", "leaflet-bar leaflet-control");
+      const btn = DomUtil.create("a", "center-control", bar) as HTMLAnchorElement;
+      btn.href = "#";
+      btn.title = "Center map (100 m scale)";
+      btn.setAttribute("role", "button");
+      btn.setAttribute("aria-label", "Center map at 100 m scale");
+      btn.innerHTML = CROSSHAIR_SVG;
+      DomEvent.disableClickPropagation(bar);
+      DomEvent.on(btn, "click", (e) => {
+        DomEvent.preventDefault(e);
+        map.setView(toLatLng(targetRef.current), CENTER_ZOOM);
+      });
+      return bar;
+    };
+    control.addTo(map);
+    return () => {
+      control.remove();
+    };
+  }, [map]);
   return null;
 }
 
@@ -162,6 +211,13 @@ export function SiteMap({
       minZoom={-4}
     >
       {focusBounds && <FitToBounds bounds={focusBounds} />}
+      <CenterControl
+        target={
+          focusBounds
+            ? [(focusBounds[0] + focusBounds[2]) / 2, (focusBounds[1] + focusBounds[3]) / 2]
+            : [extent[0] / 2, extent[1] / 2]
+        }
+      />
       {drawMode && <MapClickCapture onClick={onDrawClick} />}
       {startMode && <MapClickCapture onClick={onStartClick} />}
       <ScaleControl position="bottomleft" metric imperial={false} maxWidth={140} />

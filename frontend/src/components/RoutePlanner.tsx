@@ -107,7 +107,13 @@ export function RoutePlanner({
 
       <div className="export-buttons" style={{ marginTop: 10 }}>
         <button className="btn btn--primary" onClick={onCompute} disabled={computing}>
-          {computing ? "Computing…" : "Compute route"}
+          {computing ? (
+            <>
+              <span className="spinner" /> Computing…
+            </>
+          ) : (
+            "Compute route"
+          )}
         </button>
         {isCustomRoute && (
           <button className="btn btn--ghost" onClick={onResetToDefault}>
