@@ -32,6 +32,7 @@ import type {
 } from "../types";
 import { LAYER_COLORS } from "../colors";
 import { api } from "../api/client";
+import { clipLayers, makeArea, pointInArea, type ClipArea } from "../areaClip";
 
 // Everything here is already on ONE local metre plane, real EPSG:32635 minus
 // the study area's south-west corner (see backend app/data/real_site.py) —
@@ -162,6 +163,9 @@ interface Props {
   focusBounds: [number, number, number, number] | null;
   realRoute: RealRouteResponse | null;
   customBlocks: CustomBlock[];
+  /** The route planner's selected area (local ring) — when set, detection
+   * layers and targets are only drawn inside it. */
+  areaFilter: [number, number][] | null;
   drawMode: boolean;
   draftPoints: [number, number][];
   onDrawClick: (point: [number, number]) => void;
@@ -181,6 +185,7 @@ export function SiteMap({
   focusBounds,
   realRoute,
   customBlocks,
+  areaFilter,
   drawMode,
   draftPoints,
   onDrawClick,
@@ -190,6 +195,11 @@ export function SiteMap({
 }: Props) {
   const extent = routeInfra?.extent ?? [1000, 1000];
   const pickMode = drawMode || startMode;
+  const area = useMemo(() => (areaFilter ? makeArea(areaFilter) : null), [areaFilter]);
+  const shownLayers = useMemo(
+    () => (tileLayers && area ? clipLayers(tileLayers, area) : tileLayers),
+    [tileLayers, area]
+  );
 
   return (
     <MapContainer
@@ -207,8 +217,8 @@ export function SiteMap({
       zoomSnap={0.1}
       // CRS.Simple: zoom 0 = 1 m/px, each step down doubles that. Leaflet's
       // default floor is 0 (~100 m scale bar), so allow zooming further out
-      // to see the whole site — -4 = 16 m/px, scale bar up to ~2 km.
-      minZoom={-4}
+      // for more context — -2 = 4 m/px, scale bar tops out at 500 m.
+      minZoom={-2}
     >
       {focusBounds && <FitToBounds bounds={focusBounds} />}
       <CenterControl
@@ -227,7 +237,12 @@ export function SiteMap({
         onSelectTile={onSelectTile}
         interactive={!pickMode}
       />
-      <OtherTileLayers tiles={tiles} selectedTile={selectedTile} visible={visible} />
+      <OtherTileLayers
+        tiles={tiles}
+        selectedTile={selectedTile}
+        visible={visible}
+        area={area}
+      />
 
       {visible.studyArea &&
         routeInfra?.study_area.features.map((f, i) => (
@@ -284,7 +299,7 @@ export function SiteMap({
       )}
 
       {visible.interrows &&
-        tileLayers?.interrows.features.map((f, i) => (
+        shownLayers?.interrows.features.map((f, i) => (
           <Polygon
             key={i}
             positions={polygonPositions(f.geometry)}
@@ -293,7 +308,7 @@ export function SiteMap({
         ))}
 
       {visible.canopies &&
-        tileLayers?.canopies.features.map((f, i) => {
+        shownLayers?.canopies.features.map((f, i) => {
           const isHighlighted = highlightRowId && f.properties.row_id === highlightRowId;
           return (
             <Polygon
@@ -310,7 +325,7 @@ export function SiteMap({
         })}
 
       {visible.rows &&
-        tileLayers?.rows.features.map((f, i) => {
+        shownLayers?.rows.features.map((f, i) => {
           const isHighlighted = highlightRowId && f.properties.row_id === highlightRowId;
           return (
             <Polyline
@@ -327,7 +342,7 @@ export function SiteMap({
         })}
 
       {visible.waste &&
-        tileLayers?.waste.features.map((f, i) => (
+        shownLayers?.waste.features.map((f, i) => (
           <Polygon
             key={i}
             positions={polygonPositions(f.geometry)}
@@ -343,22 +358,24 @@ export function SiteMap({
       )}
 
       {visible.targets &&
-        realRoute?.targets.map((t) => (
-          <CircleMarker
-            key={t.id}
-            center={toLatLng(t.point)}
-            radius={6}
-            pathOptions={{
-              color: t.kind === "waste" ? LAYER_COLORS.waste.stroke : LAYER_COLORS.targets.stroke,
-              fillColor:
-                t.kind === "waste" ? LAYER_COLORS.waste.stroke : LAYER_COLORS.targets.stroke,
-              fillOpacity: 1,
-              weight: 2,
-            }}
-          >
-            <Tooltip>{t.id}</Tooltip>
-          </CircleMarker>
-        ))}
+        realRoute?.targets
+          .filter((t) => !area || pointInArea(t.point, area))
+          .map((t) => (
+            <CircleMarker
+              key={t.id}
+              center={toLatLng(t.point)}
+              radius={6}
+              pathOptions={{
+                color: t.kind === "waste" ? LAYER_COLORS.waste.stroke : LAYER_COLORS.targets.stroke,
+                fillColor:
+                  t.kind === "waste" ? LAYER_COLORS.waste.stroke : LAYER_COLORS.targets.stroke,
+                fillOpacity: 1,
+                weight: 2,
+              }}
+            >
+              <Tooltip>{t.id}</Tooltip>
+            </CircleMarker>
+          ))}
 
       {visible.customBlocks &&
         customBlocks.map((b) => (
@@ -492,10 +509,12 @@ function OtherTileLayers({
   tiles,
   selectedTile,
   visible,
+  area,
 }: {
   tiles: TileSummary[];
   selectedTile: string | null;
   visible: Record<SiteLayerKey, boolean>;
+  area: ClipArea | null;
 }) {
   const viewBounds = useViewBounds();
   const renderer = useMemo(() => canvas({ pane: "otherTileLayers", padding: 0.5 }), []);
@@ -540,12 +559,19 @@ function OtherTileLayers({
     }
   }, [inView]);
 
+  const shownByTile = useMemo(() => {
+    if (!area) return layersByTile;
+    const out: Record<string, TileLayersResponse> = {};
+    for (const [name, layers] of Object.entries(layersByTile)) out[name] = clipLayers(layers, area);
+    return out;
+  }, [layersByTile, area]);
+
   const common = { renderer, interactive: false };
 
   return (
     <Pane name="otherTileLayers" style={{ zIndex: 401, pointerEvents: "none" }}>
       {inView.map((t) => {
-        const layers = layersByTile[t.tile];
+        const layers = shownByTile[t.tile];
         if (!layers) return null;
         return (
           <Fragment key={t.tile}>

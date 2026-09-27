@@ -4,7 +4,7 @@ import { LAYER_COLORS } from "../colors";
 const CHIP_KEYS: SiteLayerKey[] = ["canopies", "rows", "interrows", "waste", "targets", "route"];
 
 const LABELS: Record<string, string> = {
-  canopies: "Canopies",
+  canopies: "Vineyard",
   rows: "Rows",
   interrows: "Inter-row",
   waste: "Waste",

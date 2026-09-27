@@ -501,6 +501,9 @@ export default function App() {
             focusBounds={focusBounds}
             realRoute={realRoute}
             customBlocks={customBlocks}
+            areaFilter={
+              scopeAreaId ? (customBlocks.find((b) => b.id === scopeAreaId)?.polygon ?? null) : null
+            }
             drawMode={drawMode}
             draftPoints={draftPoints}
             onDrawClick={addDraftPoint}

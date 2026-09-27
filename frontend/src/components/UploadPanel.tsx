@@ -75,7 +75,7 @@ export function UploadPanel({ onUploaded }: { onUploaded: (uploadedFilenames: st
             <li key={r.filename}>
               <span>{r.filename}</span>
               <span style={{ color: r.ok ? "var(--ok-text)" : "var(--danger)", fontSize: 12 }}>
-                {r.ok ? `${r.canopies} canopies, ${r.rows} rows` : r.error}
+                {r.ok ? `${r.canopies} vineyard, ${r.rows} rows` : r.error}
               </span>
             </li>
           ))}

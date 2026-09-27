@@ -37,7 +37,7 @@ export function SiteMetricsPanel({ blocks }: { blocks: TileBlockMetrics[] | null
           <div className="stat-grid" style={{ marginTop: 10 }}>
             <StatTile
               value={`${b.canopy_area_m2} m²`}
-              label={`canopy area · ${b.canopy_count} plants`}
+              label={`vineyard area · ${b.canopy_count} plants`}
               color={LAYER_COLORS.canopies.stroke}
             />
             <StatTile
@@ -50,7 +50,7 @@ export function SiteMetricsPanel({ blocks }: { blocks: TileBlockMetrics[] | null
               label={`total row length · ${b.row_count} rows`}
               color={LAYER_COLORS.rows.stroke}
             />
-            <StatTile value={`${b.canopy_count}`} label="canopy count" />
+            <StatTile value={`${b.canopy_count}`} label="vineyard count" />
           </div>
         </div>
       ))}

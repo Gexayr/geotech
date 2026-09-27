@@ -26,7 +26,7 @@ export function StatBar({
     <div className="stat-bar">
       <Cell value={String(blocks.length)} label="blocks" />
       <Cell value={String(rowCount)} label="rows" />
-      <Cell value={`${canopyHa.toFixed(2)} ha`} label="canopy" />
+      <Cell value={`${canopyHa.toFixed(2)} ha`} label="vineyard" />
       <Cell value={`${interrowHa.toFixed(2)} ha`} label="inter-row" />
       {route ? (
         <Cell value={`${(route.length_m / 1000).toFixed(1)} km`} label="route" />

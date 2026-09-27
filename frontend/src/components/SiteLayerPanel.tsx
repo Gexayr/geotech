@@ -13,7 +13,7 @@ const LABELS: Record<SiteLayerKey, string> = {
   studyArea: "Study area boundary",
   passages: "Authorised passages",
   forbidden: "Forbidden zones",
-  canopies: "Canopy polygons (vineyard)",
+  canopies: "Vineyard polygons",
   rows: "Row axes",
   interrows: "Inter-row areas",
   waste: "Waste objects",
