@@ -382,24 +382,24 @@ export default function App() {
             lastResult={lastComputeResult}
           />
 
-          {role === "farmer" ? (
-            <DrawBlockPanel
-              drawMode={drawMode}
-              pointCount={draftPoints.length}
-              onStart={startDraw}
-              onUndo={undoPoint}
-              onCancel={cancelDraw}
-              onSave={saveDraft}
-              customBlocks={customBlocks}
-              onDelete={(id) =>
-                setPendingDelete({
-                  kind: "area",
-                  id,
-                  label: customBlocks.find((b) => b.id === id)?.vineyard_id ?? id,
-                })
-              }
-            />
-          ) : (
+          <DrawBlockPanel
+            drawMode={drawMode}
+            pointCount={draftPoints.length}
+            onStart={startDraw}
+            onUndo={undoPoint}
+            onCancel={cancelDraw}
+            onSave={saveDraft}
+            customBlocks={customBlocks}
+            onDelete={(id) =>
+              setPendingDelete({
+                kind: "area",
+                id,
+                label: customBlocks.find((b) => b.id === id)?.vineyard_id ?? id,
+              })
+            }
+          />
+
+          {role === "auditor" && (
             <div className="panel">
               <h3>Auditor view</h3>
               <div className="route-note">
