@@ -148,6 +148,14 @@ function MapClickCapture({ onClick }: { onClick: (point: [number, number]) => vo
   return null;
 }
 
+// Low-res satellite background (Esri, ~2.5 m/px, ~1 MB) around the study
+// area — see backend/scripts/fetch_basemap.py, which prints these bounds.
+const BASEMAP_URL = `${import.meta.env.BASE_URL}basemap.jpg`;
+const BASEMAP_BOUNDS: LatLngBoundsExpression = [
+  [-3000, -3000],
+  [4792, 4740.8],
+];
+
 const MAX_MOSAIC_TILES = 120;
 // Each tile's layers are ~200KB of GeoJSON — cap how many are pulled in at once.
 const MAX_LAYER_TILES = 40;
@@ -215,11 +223,21 @@ export function SiteMap({
         cursor: pickMode ? "crosshair" : undefined,
       }}
       zoomSnap={0.1}
+      maxBounds={BASEMAP_BOUNDS}
+      maxBoundsViscosity={1}
       // CRS.Simple: zoom 0 = 1 m/px, each step down doubles that. Leaflet's
       // default floor is 0 (~100 m scale bar), so allow zooming further out
       // for more context — -2 = 4 m/px, scale bar tops out at 500 m.
       minZoom={-2}
     >
+      <Pane name="basemap" style={{ zIndex: 150 }}>
+        <ImageOverlay
+          url={BASEMAP_URL}
+          bounds={BASEMAP_BOUNDS}
+          interactive={false}
+          attribution="Imagery © Esri"
+        />
+      </Pane>
       {focusBounds && <FitToBounds bounds={focusBounds} />}
       <CenterControl
         target={
