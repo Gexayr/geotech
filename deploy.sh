@@ -27,6 +27,10 @@ NETWORK="geotech"
 MODEL_IMAGE="geotech-model"
 MODEL_CONTAINER="geotech-model"
 MODEL_URL="http://$MODEL_CONTAINER:9090"
+# geotech-app uses the model service only when this is true; otherwise it
+# runs on its in-process classical CV. Override per run:
+#   USE_MODEL=true ./deploy.sh --backend
+USE_MODEL="${USE_MODEL:-false}"
 
 # Runtime data kept on the host so it survives container rebuilds.
 TILES_DIR="$REPO_DIR/backend/app/data/real/tiles"
@@ -78,8 +82,11 @@ build_backend() {
     log "Restarting container"
     ensure_network
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    local model_env=()
+    [[ "$USE_MODEL" == "true" ]] && model_env=(-e MODEL_URL="$MODEL_URL")
+    log "Model service: $([[ "$USE_MODEL" == "true" ]] && echo "on ($MODEL_URL)" || echo "off (classical CV)")"
     docker run -d --name "$CONTAINER" --restart unless-stopped --network "$NETWORK" \
-        -e MODEL_URL="$MODEL_URL" \
+        "${model_env[@]}" \
         -p "127.0.0.1:$PORT:$PORT" "${mounts[@]}" "$IMAGE" >/dev/null
 
     log "Waiting for health check"
