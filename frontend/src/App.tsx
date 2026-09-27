@@ -347,10 +347,14 @@ export default function App() {
             </div>
           )}
 
-          <div className="panel">
-            <h3>Rows</h3>
-            <RowTable rows={firstBlockRows} activeRowId={activeRowId} onHoverRow={setActiveRowId} />
-          </div>
+          {firstBlockRows && firstBlockRows.length > 0 && (
+            <details className="panel targets-details">
+              <summary>Rows ({firstBlockRows.length})</summary>
+              <div className="targets-scroll">
+                <RowTable rows={firstBlockRows} activeRowId={activeRowId} onHoverRow={setActiveRowId} />
+              </div>
+            </details>
+          )}
 
           {role === "auditor" ? (
             <>
