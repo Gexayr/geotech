@@ -156,6 +156,10 @@ export function SiteMap({
         cursor: pickMode ? "crosshair" : undefined,
       }}
       zoomSnap={0.1}
+      // CRS.Simple: zoom 0 = 1 m/px, each step down doubles that. Leaflet's
+      // default floor is 0 (~100 m scale bar), so allow zooming further out
+      // to see the whole site — -4 = 16 m/px, scale bar up to ~2 km.
+      minZoom={-4}
     >
       {focusBounds && <FitToBounds bounds={focusBounds} />}
       {drawMode && <MapClickCapture onClick={onDrawClick} />}
