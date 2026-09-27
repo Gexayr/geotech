@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
+  Pane,
   Polygon,
   Polyline,
   Rectangle,
@@ -11,7 +12,7 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-import { CRS, LatLngExpression, LatLngBoundsExpression } from "leaflet";
+import { CRS, canvas, LatLngExpression, LatLngBoundsExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type {
   RouteInfraResponse,
@@ -98,6 +99,8 @@ function MapClickCapture({ onClick }: { onClick: (point: [number, number]) => vo
 }
 
 const MAX_MOSAIC_TILES = 120;
+// Each tile's layers are ~200KB of GeoJSON — cap how many are pulled in at once.
+const MAX_LAYER_TILES = 40;
 
 interface Props {
   routeInfra: RouteInfraResponse | null;
@@ -164,6 +167,7 @@ export function SiteMap({
         onSelectTile={onSelectTile}
         interactive={!pickMode}
       />
+      <OtherTileLayers tiles={tiles} selectedTile={selectedTile} visible={visible} />
 
       {visible.studyArea &&
         routeInfra?.study_area.features.map((f, i) => (
@@ -415,5 +419,120 @@ function TileMosaic({
           );
         })}
     </>
+  );
+}
+
+/** Canopies / inter-rows / rows / waste of every annotated tile in view, not
+ * just the selected one (which the main SiteMap body draws, with row
+ * highlighting). Fetched lazily per tile as it comes into view and cached.
+ * Drawn on a canvas in a pointer-events:none pane: a few dozen tiles means
+ * thousands of polygons (too many for SVG), and the canvas must not swallow
+ * clicks meant for the tile photos underneath (tile selection). */
+function OtherTileLayers({
+  tiles,
+  selectedTile,
+  visible,
+}: {
+  tiles: TileSummary[];
+  selectedTile: string | null;
+  visible: Record<SiteLayerKey, boolean>;
+}) {
+  const viewBounds = useViewBounds();
+  const renderer = useMemo(() => canvas({ pane: "otherTileLayers", padding: 0.5 }), []);
+  const [layersByTile, setLayersByTile] = useState<Record<string, TileLayersResponse>>({});
+  const requested = useRef(new Set<string>());
+  const generation = useRef(0);
+
+  // A new tile list (after an upload, possibly overwriting a tile) may carry
+  // new detections — drop the cache so tiles in view are refetched.
+  useEffect(() => {
+    generation.current += 1;
+    requested.current = new Set();
+    setLayersByTile({});
+  }, [tiles]);
+
+  const inView = useMemo(() => {
+    if (!viewBounds) return [];
+    const cx = (viewBounds[0] + viewBounds[2]) / 2;
+    const cy = (viewBounds[1] + viewBounds[3]) / 2;
+    const dist = (t: TileSummary) =>
+      Math.hypot((t.bounds[0] + t.bounds[2]) / 2 - cx, (t.bounds[1] + t.bounds[3]) / 2 - cy);
+    return tiles
+      .filter((t) => t.annotated && t.tile !== selectedTile && boundsOverlap(t.bounds, viewBounds))
+      .sort((a, b) => dist(a) - dist(b))
+      .slice(0, MAX_LAYER_TILES);
+  }, [tiles, viewBounds, selectedTile]);
+
+  useEffect(() => {
+    const gen = generation.current;
+    for (const t of inView) {
+      if (requested.current.has(t.tile)) continue;
+      requested.current.add(t.tile);
+      api
+        .getTileLayers(t.tile)
+        .then((layers) => {
+          if (gen === generation.current) setLayersByTile((m) => ({ ...m, [t.tile]: layers }));
+        })
+        .catch((e) => {
+          requested.current.delete(t.tile);
+          console.error(`Layers for ${t.tile} unavailable:`, e);
+        });
+    }
+  }, [inView]);
+
+  const common = { renderer, interactive: false };
+
+  return (
+    <Pane name="otherTileLayers" style={{ zIndex: 401, pointerEvents: "none" }}>
+      {inView.map((t) => {
+        const layers = layersByTile[t.tile];
+        if (!layers) return null;
+        return (
+          <Fragment key={t.tile}>
+            {visible.interrows &&
+              layers.interrows.features.map((f, i) => (
+                <Polygon
+                  key={`ir${i}`}
+                  {...common}
+                  positions={polygonPositions(f.geometry)}
+                  pathOptions={{ color: LAYER_COLORS.interrows.stroke, weight: 2, fillOpacity: 0.15 }}
+                />
+              ))}
+            {visible.canopies &&
+              layers.canopies.features.map((f, i) => (
+                <Polygon
+                  key={`c${i}`}
+                  {...common}
+                  positions={polygonPositions(f.geometry)}
+                  pathOptions={{
+                    color: LAYER_COLORS.canopies.stroke,
+                    weight: 2,
+                    fillColor: LAYER_COLORS.canopies.fill,
+                    fillOpacity: 0.65,
+                  }}
+                />
+              ))}
+            {visible.rows &&
+              layers.rows.features.map((f, i) => (
+                <Polyline
+                  key={`r${i}`}
+                  {...common}
+                  positions={f.geometry.coordinates.map((c: [number, number]) => toLatLng(c))}
+                  pathOptions={{ color: LAYER_COLORS.rows.stroke, weight: 3 }}
+                />
+              ))}
+            {visible.waste &&
+              layers.waste.features.map((f, i) => (
+                <Polygon
+                  key={`w${i}`}
+                  {...common}
+                  positions={polygonPositions(f.geometry)}
+                  pathOptions={{ color: LAYER_COLORS.waste.stroke, weight: 3, fillOpacity: 0.3 }}
+                />
+              ))}
+          </Fragment>
+        );
+      })}
+    </Pane>
   );
 }
