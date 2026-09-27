@@ -54,6 +54,18 @@ function padBounds(
 }
 
 type ExportKind = "annotations" | "route-infra" | null;
+
+// Remembered per browser so a refresh reopens the same tile (e.g. the one
+// just uploaded) instead of jumping back to the first one in the list.
+const SELECTED_TILE_KEY = "geotech.selectedTile";
+
+function readSavedTile(): string | null {
+  try {
+    return localStorage.getItem(SELECTED_TILE_KEY);
+  } catch {
+    return null;
+  }
+}
 type Role = "farmer" | "auditor";
 
 export default function App() {
@@ -103,8 +115,12 @@ export default function App() {
         setTiles(tileList);
         setRealRoute(route);
         setCustomBlocks(blocks);
-        const firstAnnotated = tileList.find((t) => t.annotated) ?? tileList[0];
-        if (firstAnnotated) setSelectedTile(firstAnnotated.tile);
+        const saved = readSavedTile();
+        const initial =
+          tileList.find((t) => t.tile === saved) ??
+          tileList.find((t) => t.annotated) ??
+          tileList[0];
+        if (initial) setSelectedTile(initial.tile);
       })
       .catch((e) => setError(String(e)));
   }, []);
@@ -123,6 +139,11 @@ export default function App() {
   useEffect(() => {
     if (!selectedTile) return;
     loadTileDetails(selectedTile);
+    try {
+      localStorage.setItem(SELECTED_TILE_KEY, selectedTile);
+    } catch {
+      // storage unavailable (private mode etc.) — just don't remember it
+    }
   }, [selectedTile]);
 
   const toggleLayer = (key: SiteLayerKey) => setVisible((v) => ({ ...v, [key]: !v[key] }));
