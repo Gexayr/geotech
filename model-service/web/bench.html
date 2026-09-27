@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segmentation Benchmark</title>
+<style>
+:root{--bg:#f5f6f3;--panel:#fff;--ink:#1c2220;--mute:#67716b;--line:#e0e4de;--acc:#2f6f3e;--bar:#5b8f68;--best:#e7f2e9;--bad:#b3261e;--good:#2f6f3e}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+main{max-width:1180px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:22px;margin:0 0 4px} h2{font-size:15px;margin:28px 0 8px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+.sub{color:var(--mute);margin-bottom:16px} a{color:var(--acc)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:13.5px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:12px;color:var(--mute);font-weight:600}
+tr.best td{background:var(--best)}
+.bar{display:inline-block;height:9px;background:var(--bar);border-radius:2px;vertical-align:middle;margin-right:6px}
+.desc{font-size:12px;color:var(--mute)}
+.tag{font-size:11px;padding:1px 6px;border-radius:9px;background:#fff4d6;color:#7a5200;margin-left:6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi b{font-size:22px;display:block;font-variant-numeric:tabular-nums} .kpi span{font-size:12px;color:var(--mute)}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.gal figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.gal img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover}
+.gal figcaption{padding:7px 10px;font-size:12.5px}
+.legend span{display:inline-block;margin-right:14px;font-size:12.5px}
+.sw{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px}
+.ok{color:var(--good);font-weight:600} .no{color:var(--bad);font-weight:600}
+.note{font-size:12.5px;color:var(--mute);margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Segmentation benchmark on the labelled test tiles</h1>
+  <div class="sub" id="sub">Loading…</div>
+  <div class="kpis" id="kpis"></div>
+
+  <h2>Methods compared (mean of both test tiles)</h2>
+  <div class="card"><table id="tmain"></table>
+  <div class="note">Canopy score = 0.6 × canopy IoU + 0.4 × F1 of individual plants matched at IoU ≥ 0.5, as in the challenge scoring (25 % of the total). Row F1: an axis matches when each lies ≥ 80 % within 0.4 m of the other. Held-out = each tile scored with a classifier trained only on the other tile.</div></div>
+
+  <h2>Per tile</h2>
+  <div class="card"><table id="ttile"></table></div>
+
+  <h2>Visual comparison</h2>
+  <div class="legend"><span><i class="sw" style="background:#00e6ff"></i>reference (organisers)</span><span><i class="sw" style="background:#ff00ff"></i>model prediction</span></div>
+  <div class="gal" id="gal" style="margin-top:8px"></div>
+
+  <h2>Walking route (full Sireț3 run)</h2>
+  <div class="card"><table id="troute"></table>
+  <div class="note">Scoring rule: a route with more than 2 % of its length outside inter-row areas and authorised passages scores 0 on the route criterion.</div></div>
+  <p class="note"><a href="/">← Sireț3 map</a> · <a href="/test">Model test page</a></p>
+</main>
+<script>
+const f=(x,d=3)=>x==null?'–':Number(x).toFixed(d);
+fetch('bench/results.json').then(r=>r.json()).then(R=>{
+  const M=R.methods, best=M.filter(m=>!m.key.endsWith('final')).reduce((a,b)=>b.mean.canopy_score>a.mean.canopy_score?b:a);
+  const base=M[0];
+  document.getElementById('sub').innerHTML=`Test tiles: ${R.tiles.join(', ')} · organiser reference annotations · run ${R.created}`;
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><b>${f(best.mean.canopy_score)}</b><span>best held-out canopy score (${best.name})</span></div>
+    <div class="kpi"><b>+${f(100*(best.mean.canopy_score-base.mean.canopy_score)/base.mean.canopy_score,0)} %</b><span>vs threshold rule (${f(base.mean.canopy_score)})</span></div>
+    <div class="kpi"><b>${f(best.mean.row_f1)}</b><span>row-axis F1</span></div>
+    <div class="kpi"><b>${f(best.mean.interrow_iou)}</b><span>inter-row IoU</span></div>`;
+  const cols=[['canopy_score','Canopy score'],['canopy_iou','Canopy IoU'],['canopy_f1','Plant F1@0.5'],['row_f1','Row F1'],['interrow_iou','Inter-row IoU'],['cover_acc','Cover acc.'],['structure_acc','Structure acc.']];
+  const mx=Math.max(...M.map(m=>m.mean.canopy_score));
+  document.getElementById('tmain').innerHTML=`<tr><th>Method</th>${cols.map(c=>`<th>${c[1]}</th>`).join('')}<th>Time (s)</th></tr>`+
+    M.map(m=>`<tr class="${m===best?'best':''}"><td><b>${m.name}</b>${m.key.endsWith('final')?'<span class="tag">optimistic</span>':''}<div class="desc">${m.description}</div></td>`+
+      cols.map((c,i)=>`<td>${i==0?`<span class="bar" style="width:${Math.round(70*m.mean[c[0]]/mx)}px"></span>`:''}${f(m.mean[c[0]])}</td>`).join('')+`<td>${f(m.seconds,0)}</td></tr>`).join('');
+  const tc=[['canopy_score','Canopy'],['canopy_iou','IoU'],['canopy_f1','F1'],['plants_pred','Plants pred'],['plants_ref','Plants ref'],['canopy_area_pred','Canopy m² pred'],['canopy_area_ref','ref'],['row_f1','Row F1'],['row_len_pred','Row len m pred'],['row_len_ref','ref'],['interrow_iou','Inter-row IoU']];
+  let h=`<tr><th>Method / tile</th>${tc.map(c=>`<th>${c[1]}</th>`).join('')}</tr>`;
+  M.forEach(m=>R.tiles.forEach(t=>{const p=m.per_tile[t];h+=`<tr><td>${m.name}<div class="desc">${t}</div></td>`+tc.map(c=>`<td>${Number.isInteger(p[c[0]])||c[0].includes('area')||c[0].includes('len')?f(p[c[0]],0):f(p[c[0]])}</td>`).join('')+'</tr>'}));
+  document.getElementById('ttile').innerHTML=h;
+  document.getElementById('gal').innerHTML=M.flatMap(m=>R.tiles.map(t=>`<figure><img loading="lazy" src="${m.per_tile[t].overlay}" alt="${m.name} ${t}"><figcaption><b>${m.name}</b><br>${t} · canopy ${f(m.per_tile[t].canopy_score)}</figcaption></figure>`)).join('');
+  document.getElementById('troute').innerHTML='<tr><th>Version</th><th>Solver</th><th>Length (m)</th><th>Off passable</th><th>Targets visited</th><th>Valid (≤ 2 %)</th></tr>'+
+    R.route.map(r=>`<tr><td>${r.version}</td><td>${r.solver}</td><td>${r.length_m.toLocaleString()}</td><td>${f(r.outside_pct,2)} %</td><td>${r.targets}</td><td class="${r.valid?'ok':'no'}">${r.valid?'yes':'no – scores 0'}</td></tr>`).join('');
+});
+</script>
+</body>
+</html>

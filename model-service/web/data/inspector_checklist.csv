@@ -1,0 +1,69 @@
+order,stop,id,kind,vineyard_id,row_id,gap_m,priority,what_to_check,cumulative_m,x,y,lon,lat
+1,1,W0030,waste,V07,,,3.0,"Waste object (bright): identify, photograph, remove or report.",682.3,629209.32,5220623.53,28.7035923,47.1264444
+2,2,I0062,inspection,V07,V07-R003,5.25,1.52,"Row V07-R003: 5.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",693.6,629205.29,5220615.17,28.7035367,47.12637
+3,2,I0063,inspection,V07,V07-R004,5.3,1.53,"Row V07-R004: 5.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",693.6,629204.85,5220613.17,28.7035303,47.1263521
+4,3,W0029,waste,V07,,,3.0,"Waste object (bright): identify, photograph, remove or report.",708.6,629207.88,5220628.45,28.7035746,47.126489
+5,4,I0047,inspection,V04,V04-R244,6.4,1.64,"Row V04-R244: 6.4 m planting gap - count missing vines, check for dead stock, mark for replanting.",988.0,629107.2,5220840.66,28.7023087,47.1284174
+6,5,I0051,inspection,V04,V04-R274,12.1,2.21,"Row V04-R274: 12.1 m planting gap - count missing vines, check for dead stock, mark for replanting.",1081.4,629127.84,5220771.14,28.7025608,47.1277881
+7,6,I0055,inspection,V04,V04-R318,9.7,1.97,"Row V04-R318: 9.7 m planting gap - count missing vines, check for dead stock, mark for replanting.",1308.0,629060.01,5220654.95,28.7016335,47.1267563
+8,7,I0053,inspection,V04,V04-R316,16.45,2.65,"Row V04-R316: 16.4 m planting gap - count missing vines, check for dead stock, mark for replanting.",1450.2,629039.82,5220697.0,28.7013794,47.1271385
+9,8,I0054,inspection,V04,V04-R316,6.45,1.65,"Row V04-R316: 6.5 m planting gap - count missing vines, check for dead stock, mark for replanting.",1485.8,629021.26,5220725.07,28.7011429,47.1273946
+10,9,W0023,waste,V04,,,3.0,"Waste object (bright): identify, photograph, remove or report.",1774.7,629207.78,5220710.25,28.7035967,47.1272247
+11,10,W0022,waste,V04,,,3.0,"Waste object (bright): identify, photograph, remove or report.",1834.1,629254.15,5220734.62,28.7042149,47.1274349
+12,11,W0021,waste,V04,,,3.0,"Waste object (bright): identify, photograph, remove or report.",1844.9,629261.88,5220739.73,28.7043182,47.1274793
+13,12,I0003,inspection,V04,V04-R016,13.5,2.35,"Row V04-R016: 13.5 m planting gap - count missing vines, check for dead stock, mark for replanting.",1925.3,629290.41,5220799.35,28.7047114,47.1280099
+14,13,W0015,waste,V04,,,3.0,"Waste object (bright): identify, photograph, remove or report.",1960.2,629293.75,5220770.85,28.7047472,47.127753
+15,14,I0022,inspection,V04,V04-R065,6.05,1.6,"Row V04-R065: 6.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",2150.6,629207.41,5220849.48,28.703632,47.1284771
+16,15,I0019,inspection,V04,V04-R058,6.3,1.63,"Row V04-R058: 6.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",2171.7,629205.2,5220867.52,28.7036079,47.1286398
+17,16,I0020,inspection,V04,V04-R058,5.6,1.56,"Row V04-R058: 5.6 m planting gap - count missing vines, check for dead stock, mark for replanting.",2189.9,629198.72,5220883.02,28.703527,47.1287805
+18,17,I0021,inspection,V04,V04-R061,8.25,1.82,"Row V04-R061: 8.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",2228.4,629209.75,5220850.4,28.7036631,47.128485
+19,17,I0023,inspection,V04,V04-R068,8.3,1.83,"Row V04-R068: 8.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",2228.4,629209.7,5220850.3,28.7036624,47.1284841
+20,18,I0024,inspection,V04,V04-R073,5.2,1.52,"Row V04-R073: 5.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",2345.7,629243.74,5220753.48,28.7040831,47.1276065
+21,19,I0025,inspection,V04,V04-R076,5.65,1.56,"Row V04-R076: 5.7 m planting gap - count missing vines, check for dead stock, mark for replanting.",2507.7,629193.45,5220849.48,28.7034479,47.1284799
+22,19,I0027,inspection,V04,V04-R081,5.6,1.56,"Row V04-R081: 5.6 m planting gap - count missing vines, check for dead stock, mark for replanting.",2507.7,629193.41,5220849.47,28.7034474,47.1284798
+23,20,I0029,inspection,V04,V04-R085,5.8,1.58,"Row V04-R085: 5.8 m planting gap - count missing vines, check for dead stock, mark for replanting.",2600.5,629219.69,5220772.06,28.7037715,47.1277784
+24,21,I0031,inspection,V04,V04-R087,6.7,1.67,"Row V04-R087: 6.7 m planting gap - count missing vines, check for dead stock, mark for replanting.",2671.8,629192.54,5220832.1,28.7034309,47.1283238
+25,22,I0030,inspection,V04,V04-R085,6.55,1.66,"Row V04-R085: 6.5 m planting gap - count missing vines, check for dead stock, mark for replanting.",2679.4,629192.21,5220839.48,28.7034287,47.1283901
+26,23,I0037,inspection,V04,V04-R109,9.15,1.92,"Row V04-R109: 9.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",2974.7,629174.1,5220813.74,28.7031826,47.1281622
+27,24,I0042,inspection,V04,V04-R155,6.85,1.69,"Row V04-R155: 6.8 m planting gap - count missing vines, check for dead stock, mark for replanting.",3101.9,629200.91,5220720.91,28.7035094,47.127322
+28,25,W0041,waste,V08,,,3.0,"Waste object (bright): identify, photograph, remove or report.",3527.2,629443.95,5220534.38,28.7066587,47.1255965
+29,26,W0037,waste,,,,3.0,"Waste object (bright): identify, photograph, remove or report.",3554.9,629437.07,5220559.38,28.7065753,47.1258227
+30,27,I0084,inspection,V08,V08-R014,18.35,2.83,"Row V08-R014: 18.4 m planting gap - count missing vines, check for dead stock, mark for replanting.",3630.1,629484.59,5220537.64,28.7071952,47.1256178
+31,28,I0085,inspection,V08,V08-R014,8.0,1.8,"Row V08-R014: 8.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",3647.8,629468.07,5220534.43,28.7069766,47.1255922
+32,29,W0042,waste,V08,,,3.0,"Waste object (bright): identify, photograph, remove or report.",3669.8,629452.25,5220528.98,28.7067665,47.1255463
+33,30,I0075,inspection,V07,V07-R052,5.2,1.52,"Row V07-R052: 5.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",4210.0,629216.18,5220510.95,28.7036502,47.1254305
+34,31,I0076,inspection,V07,V07-R052,5.8,1.58,"Row V07-R052: 5.8 m planting gap - count missing vines, check for dead stock, mark for replanting.",4265.5,629172.99,5220534.51,28.7030878,47.1256509
+35,32,I0074,inspection,V07,V07-R050,6.9,1.69,"Row V07-R050: 6.9 m planting gap - count missing vines, check for dead stock, mark for replanting.",4278.1,629164.23,5220541.75,28.7029745,47.1257177
+36,33,I0073,inspection,V07,V07-R050,7.1,1.71,"Row V07-R050: 7.1 m planting gap - count missing vines, check for dead stock, mark for replanting.",4312.6,629191.25,5220527.19,28.7033264,47.1255814
+37,34,I0072,inspection,V07,V07-R050,5.0,1.5,"Row V07-R050: 5.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",4351.9,629222.9,5220509.82,28.7037385,47.125419
+38,35,I0099,inspection,V10,V10-R037,5.7,1.57,"Row V10-R037: 5.7 m planting gap - count missing vines, check for dead stock, mark for replanting.",5144.7,629744.09,5220111.2,28.710492,47.1217312
+39,36,I0106,inspection,V10,V10-R153,5.1,1.51,"Row V10-R153: 5.1 m planting gap - count missing vines, check for dead stock, mark for replanting.",5420.5,629543.21,5220187.87,28.707867,47.1224603
+40,37,I0107,inspection,V10,V10-R153,5.75,1.57,"Row V10-R153: 5.8 m planting gap - count missing vines, check for dead stock, mark for replanting.",5466.6,629516.96,5220222.43,28.7075311,47.1227764
+41,38,I0147,inspection,V15,V15-R001,26.55,3.66,"Row V15-R001: 26.6 m planting gap - count missing vines, check for dead stock, mark for replanting.",6137.3,629827.55,5219729.72,28.7114817,47.1182836
+42,39,I0148,inspection,V15,V15-R004,8.35,1.83,"Row V15-R004: 8.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",6178.0,629821.24,5219732.39,28.7113994,47.1183087
+43,40,I0152,inspection,V15,V15-R005,18.9,2.89,"Row V15-R005: 18.9 m planting gap - count missing vines, check for dead stock, mark for replanting.",6184.4,629816.67,5219735.23,28.71134,47.1183352
+44,41,I0149,inspection,V15,V15-R004,10.15,2.02,"Row V15-R004: 10.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",6192.4,629814.23,5219743.04,28.7113101,47.118406
+45,42,I0151,inspection,V15,V15-R005,6.35,1.64,"Row V15-R005: 6.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",6227.4,629830.21,5219716.14,28.7115129,47.1181608
+46,43,I0162,inspection,V16,V16-R019,6.4,1.64,"Row V16-R019: 6.4 m planting gap - count missing vines, check for dead stock, mark for replanting.",6762.6,630176.4,5219739.09,28.7160812,47.118299
+47,44,I0160,inspection,V16,V16-R018,5.7,1.57,"Row V16-R018: 5.7 m planting gap - count missing vines, check for dead stock, mark for replanting.",6766.2,630178.21,5219741.41,28.7161057,47.1183195
+48,45,I0159,inspection,V16,V16-R014,5.45,1.54,"Row V16-R014: 5.5 m planting gap - count missing vines, check for dead stock, mark for replanting.",6775.3,630180.74,5219749.23,28.7161413,47.1183894
+49,46,I0161,inspection,V16,V16-R019,7.95,1.79,"Row V16-R019: 8.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",6805.2,630184.91,5219723.8,28.7161889,47.1181598
+50,47,I0178,inspection,V20,V20-R014,8.8,1.88,"Row V20-R014: 8.8 m planting gap - count missing vines, check for dead stock, mark for replanting.",7128.5,630130.89,5219507.29,28.7154144,47.1162231
+51,48,I0177,inspection,V20,V20-R013,13.2,2.32,"Row V20-R013: 13.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",7132.2,630128.14,5219511.33,28.7153794,47.11626
+52,49,W0076,waste,V24,,,3.0,"Waste object (bright): identify, photograph, remove or report.",7776.0,630379.08,5219362.2,28.7186426,47.114869
+53,50,I0155,inspection,V16,V16-R006,5.95,1.59,"Row V16-R006: 6.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",8331.8,630244.69,5219662.48,28.7169588,47.1175964
+54,51,I0140,inspection,V14,V14-R056,6.2,1.62,"Row V14-R056: 6.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",8875.4,629986.54,5219754.28,28.7135838,47.1184731
+55,52,I0141,inspection,V14,V14-R056,6.35,1.64,"Row V14-R056: 6.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",8884.2,629981.23,5219761.05,28.7135158,47.118535
+56,53,I0142,inspection,V14,V14-R058,5.0,1.5,"Row V14-R058: 5.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",9000.2,629912.32,5219847.99,28.7126328,47.1193306
+57,54,I0143,inspection,V14,V14-R058,10.1,2.01,"Row V14-R058: 10.1 m planting gap - count missing vines, check for dead stock, mark for replanting.",9013.0,629905.19,5219857.08,28.7125416,47.1194138
+58,55,I0144,inspection,V14,V14-R058,7.0,1.7,"Row V14-R058: 7.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",9026.2,629897.82,5219866.49,28.7124472,47.1194998
+59,56,I0139,inspection,V14,V14-R053,6.3,1.63,"Row V14-R053: 6.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",9133.8,629838.9,5219948.03,28.7116944,47.1202449
+60,57,I0134,inspection,V14,V14-R050,6.75,1.68,"Row V14-R050: 6.8 m planting gap - count missing vines, check for dead stock, mark for replanting.",9191.8,629872.38,5219908.47,28.7121241,47.1198825
+61,58,I0138,inspection,V14,V14-R051,5.25,1.52,"Row V14-R051: 5.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",9220.2,629888.02,5219888.53,28.7123245,47.1197001
+62,59,I0137,inspection,V14,V14-R051,6.9,1.69,"Row V14-R051: 6.9 m planting gap - count missing vines, check for dead stock, mark for replanting.",9230.2,629893.76,5219881.15,28.7123979,47.1196325
+63,60,I0136,inspection,V14,V14-R051,7.3,1.73,"Row V14-R051: 7.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",9265.1,629913.23,5219854.67,28.7126468,47.1193905
+64,61,I0135,inspection,V14,V14-R051,10.25,2.02,"Row V14-R051: 10.2 m planting gap - count missing vines, check for dead stock, mark for replanting.",9275.7,629918.43,5219847.06,28.7127131,47.119321
+65,62,I0096,inspection,V10,V10-R012,36.05,4.0,"Row V10-R012: 36.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",9999.2,629722.95,5220191.76,28.7102367,47.12246
+66,63,I0097,inspection,V10,V10-R012,27.3,3.73,"Row V10-R012: 27.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",10035.6,629702.09,5220219.3,28.7099697,47.1227118
+67,64,I0098,inspection,V10,V10-R019,5.3,1.53,"Row V10-R019: 5.3 m planting gap - count missing vines, check for dead stock, mark for replanting.",10141.9,629636.55,5220291.57,28.7091269,47.1233747
+68,65,I0102,inspection,V10,V10-R044,5.05,1.5,"Row V10-R044: 5.0 m planting gap - count missing vines, check for dead stock, mark for replanting.",10179.6,629602.94,5220282.37,28.7086813,47.1232986

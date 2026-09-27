@@ -9,6 +9,7 @@ import type {
   TileMetricsResponse,
   RealRouteResponse,
   CustomBlock,
+  Role,
 } from "../types";
 
 // "" = same origin — correct for the single-container Docker build, where
@@ -43,7 +44,7 @@ export const api = {
     getJson<TileMetricsResponse>(`/api/site/tiles/${encodeURIComponent(tile)}/metrics`),
   tileImageUrl: (tile: string) =>
     `${BASE_URL}/api/site/tiles/${encodeURIComponent(tile)}/image.jpg`,
-  getRealRoute: () => getJson<RealRouteResponse>("/api/site/route"),
+  getRealRoute: (role: Role) => getJson<RealRouteResponse>(`/api/site/route?role=${role}`),
   // For turning a relative path the backend returned (e.g. an upload's
   // annotation_xml_url) into a fetchable/clickable absolute URL.
   apiUrl: (path: string) => `${BASE_URL}${path}`,
@@ -64,6 +65,7 @@ export const api = {
     if (!res.ok) throw new Error(`Failed to delete tile: ${res.status}`);
   },
   computeCustomRoute: async (params: {
+    role: Role;
     start?: [number, number];
     tiles?: string[];
     area?: [number, number][];

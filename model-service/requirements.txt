@@ -1,0 +1,15 @@
+# core (training-free pipeline, route, web app) - Python 3.10
+numpy==2.2.6
+scipy==1.15.3
+pandas==2.3.3
+rasterio==1.4.4
+shapely==2.1.2
+geopandas==1.1.4
+pyogrio==0.13.0
+pyproj==3.7.1
+opencv-python-headless==5.0.0.93
+pillow==12.3.0
+scikit-image==0.25.2
+ortools==9.14.6206
+flask==3.1.1
+waitress==3.0.2

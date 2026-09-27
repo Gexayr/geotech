@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "start",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "note": "organiser start point" }, "geometry": { "type": "Point", "coordinates": [ 28.707377621998358, 47.123033463692671 ] } }
+]
+}

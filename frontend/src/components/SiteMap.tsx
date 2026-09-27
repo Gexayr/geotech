@@ -29,6 +29,7 @@ import type {
   SiteLayerKey,
   RealRouteResponse,
   CustomBlock,
+  RealTarget,
 } from "../types";
 import { LAYER_COLORS } from "../colors";
 import { api } from "../api/client";
@@ -155,6 +156,13 @@ const BASEMAP_BOUNDS: LatLngBoundsExpression = [
   [-3000, -3000],
   [4792, 4740.8],
 ];
+
+const targetColor = (kind: RealTarget["kind"]) =>
+  kind === "waste"
+    ? LAYER_COLORS.waste.stroke
+    : kind === "audit"
+      ? LAYER_COLORS.auditTargets.stroke
+      : LAYER_COLORS.targets.stroke;
 
 const MAX_MOSAIC_TILES = 120;
 // Each tile's layers are ~200KB of GeoJSON — cap how many are pulled in at once.
@@ -384,14 +392,16 @@ export function SiteMap({
               center={toLatLng(t.point)}
               radius={6}
               pathOptions={{
-                color: t.kind === "waste" ? LAYER_COLORS.waste.stroke : LAYER_COLORS.targets.stroke,
-                fillColor:
-                  t.kind === "waste" ? LAYER_COLORS.waste.stroke : LAYER_COLORS.targets.stroke,
+                color: targetColor(t.kind),
+                fillColor: targetColor(t.kind),
                 fillOpacity: 1,
                 weight: 2,
               }}
             >
-              <Tooltip>{t.id}</Tooltip>
+              <Tooltip>
+                {t.id}
+                {t.reason ? ` — ${t.reason}` : ""}
+              </Tooltip>
             </CircleMarker>
           ))}
 

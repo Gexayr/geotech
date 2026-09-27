@@ -78,7 +78,7 @@ export interface TileSummary {
   bounds: [number, number, number, number]; // [x0, y0, x1, y1] local metres
   vineyard_ids: string[];
   annotated: boolean;
-  source: "ground_truth" | "classical_cv" | "uploaded" | null;
+  source: "ground_truth" | "classical_cv" | "uploaded" | "model" | null;
 }
 
 export interface CustomBlock {
@@ -124,13 +124,17 @@ export type SiteLayerKey =
   | "route"
   | "customBlocks";
 
+export type Role = "farmer" | "auditor";
+
 export interface RealTarget {
   id: string;
-  kind: "inspection" | "waste";
+  // "audit" = an auditor verification point from the model service
+  kind: "inspection" | "waste" | "audit";
   point: [number, number];
   vineyard_id: string | null;
   row_id: string | null;
   source_tile: string;
+  reason?: string; // model service: why this is a target
 }
 
 export interface RealRoute {

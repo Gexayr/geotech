@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "name": "siret3_route_start",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::32635"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "START",
+        "description": "Route start and finish: dirt-road junction at the north-west corner of the vineyard block",
+        "crs": "EPSG:32635",
+        "lon": 28.7073776,
+        "lat": 47.1230335,
+        "tile": "siret3_r018_c010.tif"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          629504.7,
+          5220250.75
+        ]
+      }
+    }
+  ]
+}

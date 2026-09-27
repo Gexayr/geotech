@@ -1,0 +1,13 @@
+# geotech-model: detection + measurements + farmer/auditor routes (CPU only, no weights download needed)
+FROM python:3.10-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 OMP_NUM_THREADS=2 TILES_DIR=/data/tiles ROUTE_DIR=/data/route CACHE_DIR=/data/cache
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt requirements-service.txt ./
+RUN pip install -r requirements.txt -r requirements-service.txt
+COPY vine/ vine/
+COPY service/ service/
+COPY model/vine_model_v1.json model/
+EXPOSE 9090
+HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request;urllib.request.urlopen('http://localhost:9090/health')"
+CMD ["uvicorn", "service.app:app", "--host", "0.0.0.0", "--port", "9090", "--workers", "1"]

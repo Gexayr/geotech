@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./api/client";
 import { SiteMap } from "./components/SiteMap";
 import { SiteLayerPanel } from "./components/SiteLayerPanel";
@@ -21,6 +21,7 @@ import type {
   SiteLayerKey,
   RealRouteResponse,
   CustomBlock,
+  Role,
 } from "./types";
 
 const DEFAULT_VISIBILITY: Record<SiteLayerKey, boolean> = {
@@ -67,7 +68,6 @@ function readSavedTile(): string | null {
     return null;
   }
 }
-type Role = "farmer" | "auditor";
 
 export default function App() {
   const [role, setRole] = useState<Role>("farmer");
@@ -98,6 +98,9 @@ export default function App() {
   // Label for whatever slow server action is in flight (delete, compute…) —
   // shown as a spinner pill on the map so the user knows to wait.
   const [busy, setBusy] = useState<string | null>(null);
+  // Bumped per route request so a slow, superseded answer (the model
+  // service takes up to a minute) can't overwrite a newer one.
+  const routeRequest = useRef(0);
   // A delete waiting for the user's OK in the confirm modal.
   const [pendingDelete, setPendingDelete] = useState<
     { kind: "tile" | "area"; id: string; label: string } | null
@@ -112,7 +115,7 @@ export default function App() {
       api.getRouteInfra(),
       api.listTiles(),
       // A route failure shouldn't take the tiles/map down with it.
-      api.getRealRoute().catch((e) => {
+      api.getRealRoute(role).catch((e) => {
         console.error("Route unavailable:", e);
         return null;
       }),
@@ -209,11 +212,14 @@ export default function App() {
       const area = scopeAreaId
         ? customBlocks.find((b) => b.id === scopeAreaId)?.polygon
         : undefined;
+      const id = ++routeRequest.current;
       const result = await api.computeCustomRoute({
+        role,
         start: customStart ?? undefined,
         tiles: scopeTiles.length > 0 ? scopeTiles : undefined,
         area,
       });
+      if (id !== routeRequest.current) return; // superseded (e.g. role switched)
       setRealRoute(result);
       setIsCustomRoute(true);
       setLastComputeResult({ found: result.route !== null, message: result.message });
@@ -238,6 +244,32 @@ export default function App() {
     }
   };
 
+  // Farmer and auditor get different routes from the model service —
+  // re-plan (same scope) whenever the role switches.
+  const firstRoleRender = useRef(true);
+  useEffect(() => {
+    if (firstRoleRender.current) {
+      firstRoleRender.current = false;
+      return;
+    }
+    if (isCustomRoute) {
+      computeRoute();
+      return;
+    }
+    const id = ++routeRequest.current;
+    setBusy(`Planning the ${role} route…`);
+    api
+      .getRealRoute(role)
+      .then((route) => {
+        if (id === routeRequest.current) setRealRoute(route);
+      })
+      .catch((e) => setError(String(e)))
+      .finally(() => {
+        if (id === routeRequest.current) setBusy(null);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
   const resetRouteToDefault = async () => {
     setCustomStart(null);
     setScopeTiles([]);
@@ -246,7 +278,9 @@ export default function App() {
     setLastComputeResult(null);
     setBusy("Resetting route…");
     try {
-      setRealRoute(await api.getRealRoute());
+      const id = ++routeRequest.current;
+      const route = await api.getRealRoute(role);
+      if (id === routeRequest.current) setRealRoute(route);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -260,7 +294,7 @@ export default function App() {
         api.listTiles(),
         // New disrupted-row/waste targets from the upload feed the Targets
         // layer too — without this it only updates on a full page reload.
-        api.getRealRoute().catch((e) => {
+        api.getRealRoute(role).catch((e) => {
           console.error("Route refresh after upload failed:", e);
           return null;
         }),
@@ -293,7 +327,7 @@ export default function App() {
       const [tileList, route] = await Promise.all([
         api.listTiles(),
         // The deleted tile's targets must drop out of the route too.
-        api.getRealRoute().catch((e) => {
+        api.getRealRoute(role).catch((e) => {
           console.error("Route refresh after delete failed:", e);
           return null;
         }),

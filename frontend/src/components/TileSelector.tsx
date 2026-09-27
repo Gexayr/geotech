@@ -26,6 +26,7 @@ export function TileSelector({ tiles, selected, onSelect, onDelete, deleting }: 
               {t.source === "ground_truth" ? " (ground truth)" : ""}
               {t.source === "classical_cv" ? " (auto CV)" : ""}
               {t.source === "uploaded" ? " (your upload)" : ""}
+              {t.source === "model" ? " (model)" : ""}
             </option>
           ))}
         </select>

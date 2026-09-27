@@ -1,0 +1,109 @@
+{
+  "model": "U-Net (base 16, 5 levels), classes bg/interior/boundary, 5 cm/px",
+  "method": "self-training: pipeline pseudo-labels on all vineyard tiles, then fine-tune on reference",
+  "pseudo_tiles": 108,
+  "folds": {
+    "pseudo->siret3_r021_c012": {
+      "best_checkpoint": "checkpoints/unet_pseudo_step00900.pth",
+      "heldout": {
+        "canopy_iou": 0.637,
+        "plant_f1": 0.651,
+        "canopy_score": 0.643,
+        "plants_ref": 399,
+        "plants_pred": 479,
+        "tp": 286
+      }
+    },
+    "pseudo->siret3_r006_c004": {
+      "best_checkpoint": "checkpoints/unet_pseudo_step00900.pth",
+      "heldout": {
+        "canopy_iou": 0.609,
+        "plant_f1": 0.548,
+        "canopy_score": 0.585,
+        "plants_ref": 251,
+        "plants_pred": 380,
+        "tp": 173
+      }
+    }
+  },
+  "stage1": [
+    {
+      "step": 300,
+      "loss": 0.9758,
+      "val_score": 0.1365,
+      "val": {
+        "r021_c012": 0.114,
+        "r006_c004": 0.159
+      },
+      "checkpoint": "checkpoints/unet_pseudo_step00300.pth"
+    },
+    {
+      "step": 600,
+      "loss": 0.9295,
+      "val_score": 0.193,
+      "val": {
+        "r021_c012": 0.159,
+        "r006_c004": 0.227
+      },
+      "checkpoint": "checkpoints/unet_pseudo_step00600.pth"
+    },
+    {
+      "step": 900,
+      "loss": 0.9482,
+      "val_score": 0.614,
+      "val": {
+        "r021_c012": 0.643,
+        "r006_c004": 0.585
+      },
+      "checkpoint": "checkpoints/unet_pseudo_step00900.pth"
+    },
+    {
+      "step": 1200,
+      "loss": 0.6578,
+      "val_score": 0.4455,
+      "val": {
+        "r021_c012": 0.463,
+        "r006_c004": 0.428
+      },
+      "checkpoint": "checkpoints/unet_pseudo_step01200.pth"
+    },
+    {
+      "step": 1500,
+      "loss": 0.8744,
+      "val_score": 0.5615,
+      "val": {
+        "r021_c012": 0.585,
+        "r006_c004": 0.538
+      },
+      "checkpoint": "checkpoints/unet_pseudo_step01500.pth"
+    },
+    {
+      "step": 1800,
+      "loss": 1.1093,
+      "val_score": 0.5415,
+      "val": {
+        "r021_c012": 0.566,
+        "r006_c004": 0.517
+      },
+      "checkpoint": "checkpoints/unet_pseudo_step01800.pth"
+    }
+  ],
+  "stage2": [
+    {
+      "step": 200,
+      "loss": 0.9379,
+      "checkpoint": "checkpoints/unet_finetune_step00200.pth"
+    },
+    {
+      "step": 400,
+      "loss": 0.5994,
+      "checkpoint": "checkpoints/unet_finetune_step00400.pth"
+    }
+  ],
+  "weights": "model/canopy_unet.pth",
+  "seconds": 3400,
+  "shipped": {
+    "checkpoint": "checkpoints/unet_pseudo_step00900.pth",
+    "reason": "best end-to-end held-out canopy score (0.600); fine-tuning on the 2 reference tiles lowered it to 0.526 (over-split plants), so the fine-tuned weights are kept only as checkpoints/unet_finetune_final_notshipped.pth"
+  }
+}

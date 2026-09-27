@@ -1,0 +1,21 @@
+# Model service next to geotech-app (not exposed to the internet; call http://geotech-model:9090).
+# Run from this directory: docker compose -f docker-compose.model.yml up -d --build
+# Data paths are relative to this file — the tiles/route folders live in ../backend.
+services:
+  geotech-model:
+    build: {context: ., dockerfile: Dockerfile.model}
+    image: geotech-model
+    container_name: geotech-model
+    mem_limit: 1500m
+    cpus: 4
+    volumes:
+      - ../backend/app/data/real/tiles:/data/tiles:ro
+      - ../backend/app/data/real/route:/data/route:ro
+      - model-cache:/data/cache
+    networks: [geotech]
+    restart: unless-stopped
+volumes:
+  model-cache:
+networks:
+  geotech:
+    external: true

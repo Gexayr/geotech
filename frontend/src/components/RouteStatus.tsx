@@ -50,7 +50,7 @@ export function RouteStatus({
               </thead>
               <tbody>
                 {realRoute.targets.map((t) => (
-                  <tr key={t.id}>
+                  <tr key={t.id} title={t.reason}>
                     <td>{t.id}</td>
                     <td>{t.kind}</td>
                     <td>{t.row_id ?? t.vineyard_id}</td>

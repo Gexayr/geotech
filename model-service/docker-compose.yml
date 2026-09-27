@@ -1,0 +1,14 @@
+services:
+  vineyard:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      VINE_MAX_JOBS: "1"          # concurrent model runs; raise with more CPU / RAM
+    volumes:
+      - ./maps:/app/maps          # put new orthomosaics here for batch runs
+      - ./results:/app/results
+      - ./work/uploads:/app/work/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s

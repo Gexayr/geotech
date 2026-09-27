@@ -61,6 +61,7 @@ class CustomRouteRequest(BaseModel):
     start: list[float] | None = None  # [x, y] local plane; omit = organizer's default
     tiles: list[str] | None = None  # subset of annotated tile names; omit = all loaded
     area: list[list[float]] | None = None  # hand-drawn polygon; filters targets to inside it
+    role: Literal["farmer", "auditor"] = "farmer"  # which route the model service plans
 
 
 class RouteResponse(BaseModel):

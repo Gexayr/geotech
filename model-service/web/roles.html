@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Farmer & Inspector Routes</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#f6f7f4;--panel:#fff;--ink:#1d2320;--mute:#66706a;--line:#e1e5df;--acc:#2f6f3e;--farm:#0a84ff;--insp:#e0a100}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);display:flex;height:100vh}
+#side{width:420px;min-width:330px;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:14px 16px 30px}
+#map{flex:1;background:#1b1f1d}
+h1{font-size:18px;margin:0 0 2px}.sub{color:var(--mute);font-size:12px;margin-bottom:10px}
+a{color:var(--acc)}
+.sw{display:flex;gap:4px;margin:8px 0 10px}.sw button{flex:1;font:inherit;border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px;cursor:pointer}
+.sw button.on[data-r=farmer]{background:var(--farm);border-color:var(--farm);color:#fff}
+.sw button.on[data-r=inspector]{background:var(--insp);border-color:var(--insp);color:#1d2320}
+.sw button.on[data-r=both]{background:var(--ink);border-color:var(--ink);color:#fff}
+.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.card.farmer{border-color:#9cc8ff;background:#f3f8ff}.card.inspector{border-color:#ecd28a;background:#fffaf0}
+.card h2{font-size:14px;margin:0 0 4px;display:flex;justify-content:space-between}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.kp div{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.02em}
+.kp b{display:block;font-size:16px;color:var(--ink);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+.what{font-size:12.5px;color:var(--mute);margin:4px 0 0}
+h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:14px 0 4px}
+.list{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+ol{margin:0;padding-left:22px}li{margin:3px 0;cursor:pointer;font-size:13px}li:hover{color:var(--acc)}li.work{color:#0a5bd3}li.turn{color:#556}
+table{width:100%;border-collapse:collapse;font-size:12.5px}td,th{padding:4px 5px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}tbody tr{cursor:pointer}tbody tr:hover{background:#fff4d6}
+.legend{font-size:12px;display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px}.legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:3px}
+.note{font-size:11.5px;color:var(--mute);margin-top:10px}
+@media (max-width:760px){body{flex-direction:column}#side{width:100%;height:50vh;border-right:0;border-bottom:1px solid var(--line)}#map{height:50vh}}
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>Farmer &amp; inspector routes</h1>
+  <div class="sub">Two different graphs over the same vineyard, both closed tours from the start point. <a href="/">Result map</a> · <a href="/test">Test on another map</a></div>
+  <div class="sw"><button data-r="farmer">Farmer</button><button data-r="inspector">Inspector</button><button data-r="both" class="on">Both</button></div>
+  <div id="cards"></div>
+  <div class="legend"><span><i style="background:var(--farm)"></i>farmer route</span><span><i style="background:#ffd400"></i>inspector route</span><span><i style="background:#9cc8ff"></i>farmer graph (layer menu)</span><span><i style="background:#ff9800"></i>gap</span><span><i style="background:#ff00ff"></i>waste</span></div>
+  <div id="detail"></div>
+  <div class="note" id="note"></div>
+</div>
+<div id="map"></div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(x,d=0)=>x==null||x===''||isNaN(x)?'–':Number(x).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const get=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+const map=L.map('map',{preferCanvas:true,maxZoom:23});
+const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:23,maxNativeZoom:19,attribution:'Esri World Imagery'}).addTo(map);
+let hl=null,RJ=null,LY={};
+const hlc=cs=>{if(hl)map.removeLayer(hl);hl=L.featureGroup(cs.filter(c=>c&&c.length>1).map(c=>L.polyline(c.map(p=>[p[1],p[0]]),{color:'#00e5ff',weight:8,opacity:.9}))).addTo(map);if(hl.getLayers().length)map.fitBounds(hl.getBounds().pad(.5),{maxZoom:21})};
+(async()=>{
+  const [meta,blocks,rows,insp,waste,rf,ri,gf,gi,rj]=await Promise.all(['meta.json','blocks.geojson','row.geojson','inspection.geojson','waste.geojson','route_farmer.geojson','route_inspector.geojson','graph_farmer.geojson','graph_inspector.geojson','roles.json'].map(f=>get('data/'+f)));
+  RJ=rj||{};
+  const over={};
+  if(meta) over['Orthomosaic']=L.imageOverlay('data/ortho.jpg',meta.ortho_bounds).addTo(map);
+  if(blocks) over['Blocks']=L.geoJSON(blocks,{style:{color:'#fff',weight:1.5,fill:false,dashArray:'6 4'}}).addTo(map);
+  if(rows) over['Row axes']=L.geoJSON(rows,{style:{color:'#39d353',weight:1,opacity:.7}}).addTo(map);
+  if(gf) over['Farmer graph (lane ends, work + headland edges)']=L.geoJSON(gf,{filter:f=>f.properties.kind!=='transfer'&&f.properties.kind!=='return',pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:2,color:'#6fb6ff',weight:1,fillColor:'#fff',fillOpacity:1}),style:f=>({color:'#9cc8ff',weight:f.properties.kind==='work'?1.2:0.8,dashArray:f.properties.kind==='work'?null:'2 3'}),onEachFeature:(f,l)=>l.bindTooltip(`${f.properties.element} ${f.properties.id} · ${f.properties.kind}${f.properties.length_m?' · '+fmt(f.properties.length_m,1)+' m':''}`)});
+  if(gi) over['Inspector graph (stops + legs)']=L.geoJSON(gi,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:3,color:'#e0a100',weight:1,fillColor:'#fff',fillOpacity:1}),style:{color:'#e0a100',weight:1,dashArray:'3 3'},onEachFeature:(f,l)=>l.bindTooltip(`${f.properties.element} ${f.properties.id}`)});
+  if(rf) LY.farmer=over['Farmer route']=L.geoJSON(rf,{style:{color:'#0a84ff',weight:2.5,opacity:.9}}).addTo(map);
+  if(ri) LY.inspector=over['Inspector route']=L.geoJSON(ri,{style:{color:'#ffd400',weight:4,opacity:.95}}).addTo(map);
+  if(insp) over['Gaps (inspection points)']=L.geoJSON(insp,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:4,color:'#fff',weight:1,fillColor:'#ff9800',fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(`<b>${f.properties.inspection_id}</b> · ${f.properties.row_id}<br>gap ${fmt(f.properties.gap_m,1)} m`)}).addTo(map);
+  if(waste) over['Waste']=L.geoJSON(waste,{style:{color:'#ff00ff',weight:2,fill:false},onEachFeature:(f,l)=>l.bindPopup(`<b>${f.properties.waste_id}</b> · ${f.properties.kind}`)}).addTo(map);
+  L.control.layers({'Esri imagery':esri},over,{collapsed:true}).addTo(map);
+  L.control.scale({imperial:false}).addTo(map);
+  const fit=()=>{map.invalidateSize();const b=(LY.farmer||LY.inspector||over['Orthomosaic']);if(b)map.fitBounds(b.getBounds())};let n=0;const iv=setInterval(()=>{map.invalidateSize();if(map.getSize().x>50){fit();if(++n>2)clearInterval(iv)}},400);
+  const F=RJ.farmer&&RJ.farmer.summary, I=RJ.inspector&&RJ.inspector.summary;
+  $('cards').innerHTML=(F?`<div class="card farmer"><h2><span>Farmer: field work</span><span>${fmt(F.length_m)} m</span></h2>
+     <div class="what">Works <b>every inter-row once</b> (spraying, mowing, pruning, harvest), turning on the headlands. Graph: lane ends + work / headland / transfer edges; rural postman problem solved as a generalised TSP.</div>
+     <div class="kp"><div><b>${fmt(F.minutes)} min</b>at ${F.speed_kmh} km/h</div><div><b>${F.lanes_worked}</b>inter-rows</div><div><b>${F.efficiency_pct} %</b>working</div>
+     <div><b>${fmt(F.work_m)} m</b>work</div><div><b>${fmt(F.turn_m)} m</b>turns</div><div><b>${fmt(F.transfer_m)} m</b>transfers</div></div></div>`:'')+
+    (I?`<div class="card inspector"><h2><span>Inspector: problem spots</span><span>${fmt(I.length_m)} m</span></h2>
+     <div class="what">Visits only <b>gaps and waste</b>, ordered by priority (waste 3, gaps 1 + gap/10 m), on authorised paths and inter-rows only (≤ 1.9 % off). Prize-collecting TSP.</div>
+     <div class="kp"><div><b>${fmt(I.minutes)} min</b>at 4 km/h</div><div><b>${I.n_targets}/${I.reachable_targets}</b>spots</div><div><b>${fmt(I.outside_passable_pct,2)} %</b>off paths</div></div></div>`:'')+
+    (!F&&!I?'<p>No role routes found. Run <code>python -m vine route output --route none</code> and rebuild the web data.</p>':'');
+  const show=r=>{document.querySelectorAll('.sw button').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+    ['farmer','inspector'].forEach(k=>{if(LY[k]){(r===k||r==='both')?LY[k].addTo(map):map.removeLayer(LY[k])}});
+    document.querySelectorAll('.card').forEach(c=>c.style.display=(r==='both'||c.classList.contains(r))?'':'none');
+    let h='';
+    if((r==='farmer'||r==='both')&&RJ.farmer){h+=`<h3>Farmer instructions (${RJ.farmer.steps.length} steps)</h3><div class="list"><ol>`+RJ.farmer.steps.map((s,j)=>`<li class="${s.kind}" data-f="${j}">${s.text}</li>`).join('')+'</ol></div>';}
+    if((r==='inspector'||r==='both')&&RJ.inspector){h+=`<h3>Inspector checklist (${RJ.inspector.checklist.length} spots)</h3><div class="list"><table><thead><tr><th>#</th><th>spot</th><th>what to check</th><th>m</th></tr></thead><tbody>`+RJ.inspector.checklist.map((c,j)=>`<tr data-c="${j}"><td>${c.order}</td><td>${c.id}</td><td>${c.what_to_check}</td><td>${fmt(c.cumulative_m)}</td></tr>`).join('')+'</tbody></table></div>';}
+    $('detail').innerHTML=h;};
+  document.querySelectorAll('.sw button').forEach(b=>b.onclick=()=>show(b.dataset.r));
+  $('detail').onclick=e=>{const f=e.target.closest('[data-f]');if(f){hlc([RJ.farmer.steps[+f.dataset.f].coords]);return}
+    const c=e.target.closest('[data-c]');if(c){const k=RJ.inspector.checklist[+c.dataset.c];const leg=RJ.inspector.instructions.find(g=>g.to===k.id);
+      if(leg)hlc(leg.steps.map(s=>s.coords));else if(k.lon)map.setView([k.lat,k.lon],21)}};
+  show('both');
+  $('note').textContent='Lengths in metres on the map projection. Click a step or a checklist row to highlight it on the map.';
+})();
+</script>
+</body>
+</html>

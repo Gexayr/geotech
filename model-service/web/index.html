@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sireț3 Vineyard Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#f6f7f4;--panel:#fff;--ink:#1d2320;--mute:#66706a;--line:#e1e5df;--acc:#2f6f3e;--warn:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);display:flex;height:100vh}
+#side{width:390px;min-width:320px;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:14px 16px}
+#map{flex:1}
+h1{font-size:18px;margin:0 0 2px}
+.sub{color:var(--mute);font-size:12px;margin-bottom:12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.03em}
+.kpi.route{grid-column:1/3;border-color:#d6a21e;background:#fffaf0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:16px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#eef4ee}
+.tabs{display:flex;gap:4px;margin:10px 0 6px}
+.tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px;cursor:pointer;font:inherit;font-size:12px}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.scroll{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.legend{font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-2px}
+input[type=search]{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;margin-bottom:6px}
+.note{font-size:11.5px;color:var(--mute);margin-top:10px}
+.leaflet-popup-content{font-size:12.5px}
+@media (max-width:760px){body{flex-direction:column}#side{width:100%;height:45vh;border-right:0;border-bottom:1px solid var(--line)}#map{height:55vh}}
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>Sireț3 vineyard map</h1>
+  <div class="sub">Auto-annotated canopies, rows, inter-rows, waste and inspection route · EPSG:32635 measurements<br><a href="/roles" style="color:#0a84ff;font-weight:600">Farmer &amp; inspector routes →</a> · <a href="/test" style="color:#2f6f3e">Test on another map →</a></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="legend">
+    <div><span class="sw" style="background:#39d353"></span>Canopy (vineyard)</div>
+    <div><span class="sw" style="background:#1f77ff"></span>Row: regular</div>
+    <div><span class="sw" style="background:#ff3b30"></span>Row: disrupted</div>
+    <div><span class="sw" style="background:#9aa0a6"></span>Row: unassessable</div>
+    <div><span class="sw" style="background:#c8864a"></span>Inter-row: bare soil</div>
+    <div><span class="sw" style="background:#8bc34a"></span>Inter-row: vegetation</div>
+    <div><span class="sw" style="background:#e0c341"></span>Inter-row: mixed</div>
+    <div><span class="sw" style="background:#ff00ff"></span>Waste</div>
+    <div><span class="sw" style="background:#ff9800;border-radius:50%"></span>Inspection point</div>
+    <div><span class="sw" style="background:#ffd400"></span>Walking route</div>
+    <div><span class="sw" style="background:#00e5ff"></span>Lawnmower route (layer menu)</div>
+  </div>
+  <div class="tabs"><button data-t="blocks" class="on">Blocks</button><button data-t="rows">Rows</button><button data-t="route">Route</button></div>
+  <div id="tab-blocks"><div class="scroll"><table><thead><tr><th>vineyard_id</th><th>rows</th><th>row len m</th><th>canopy m²</th><th>inter-row m²</th></tr></thead><tbody id="tb-blocks"></tbody></table></div></div>
+  <div id="tab-rows" hidden><input type="search" id="rowq" placeholder="filter: vineyard_id or row_id or structure"><div class="scroll"><table><thead><tr><th>row_id</th><th>vineyard_id</th><th>length m</th><th>structure</th></tr></thead><tbody id="tb-rows"></tbody></table></div></div>
+  <div id="tab-route" hidden><div id="routeinfo"></div><div class="scroll"><table><thead><tr><th>#</th><th>target</th><th>vineyard_id</th><th>row_id</th></tr></thead><tbody id="tb-route"></tbody></table></div></div>
+  <div class="note" id="note"></div>
+</div>
+<div id="map"></div>
+<script>
+const fmt=(x,d=0)=>x===''||x==null||isNaN(x)?'–':Number(x).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const map=L.map('map',{preferCanvas:true,maxZoom:23});
+const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:23,maxNativeZoom:19,attribution:'Esri World Imagery'}).addTo(map);
+const osm=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:23,maxNativeZoom:19,attribution:'© OpenStreetMap'});
+const get=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+const csv=t=>{const L_=t.trim().split(/\r?\n/);const h=L_[0].split(',');return L_.slice(1).map(l=>{const v=l.split(',');const o={};h.forEach((k,i)=>o[k]=v[i]);return o})};
+const rowCol={regular:'#1f77ff',disrupted:'#ff3b30',unassessable:'#9aa0a6'};
+const irCol={bare_soil:'#c8864a',vegetation:'#8bc34a',mixed:'#e0c341',unassessable:'#9aa0a6'};
+let rowLayers={},blockLayers={};
+(async()=>{
+  const [meta,blocks,vine,rows,ir,waste,insp,route,start,lawn,mtxt]=await Promise.all(['meta.json','blocks.geojson','vineyard.geojson','row.geojson','interrow_area.geojson','waste.geojson','inspection.geojson','route.geojson','start.geojson','route_lawnmower.geojson'].map(f=>get('data/'+f)).concat([fetch('data/measurements.csv').then(r=>r.text())]));
+  const over={};
+  if(meta){over['Orthomosaic (Sireț3)']=L.imageOverlay('data/ortho.jpg',meta.ortho_bounds,{opacity:1}).addTo(map);}
+  if(blocks){over['Vineyard blocks']=L.geoJSON(blocks,{style:{color:'#fff',weight:2,fill:false,dashArray:'6 4'},onEachFeature:(f,l)=>{blockLayers[f.properties.vineyard_id]=l;l.bindTooltip('vineyard_id '+f.properties.vineyard_id,{sticky:true})}}).addTo(map);}
+  if(ir){over['Inter-row areas']=L.geoJSON(ir,{style:f=>({color:irCol[f.properties.interrow_cover],weight:0.5,fillOpacity:.35}),onEachFeature:(f,l)=>l.bindPopup(`<b>interrow_area</b><br>vineyard_id: ${f.properties.vineyard_id}<br>cover: ${f.properties.interrow_cover}<br>area: ${fmt(f.properties.area_m2,1)} m²`)}).addTo(map);}
+  if(vine){over['Canopies (vineyard)']=L.geoJSON(vine,{style:{color:'#39d353',weight:1,fillOpacity:.45},onEachFeature:(f,l)=>l.bindPopup(`<b>vineyard (canopy)</b><br>vineyard_id: ${f.properties.vineyard_id}<br>row_id: ${f.properties.row_id}<br>area: ${fmt(f.properties.area_m2,2)} m²`)}).addTo(map);}
+  if(rows){over['Row axes']=L.geoJSON(rows,{style:f=>({color:rowCol[f.properties.row_structure],weight:2.5}),onEachFeature:(f,l)=>{rowLayers[f.properties.row_id]=l;l.bindPopup(`<b>row ${f.properties.row_id}</b><br>vineyard_id: ${f.properties.vineyard_id}<br>length: ${fmt(f.properties.length_m,2)} m<br>row_structure: ${f.properties.row_structure}`)}}).addTo(map);}
+  if(waste){over['Waste']=L.geoJSON(waste,{style:{color:'#ff00ff',weight:2,fill:false},onEachFeature:(f,l)=>l.bindPopup(`<b>waste ${f.properties.waste_id}</b><br>vineyard_id: ${f.properties.vineyard_id}<br>cue: ${f.properties.kind}`)}).addTo(map);}
+  if(insp){over['Inspection points']=L.geoJSON(insp,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:5,color:'#fff',weight:1.5,fillColor:'#ff9800',fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(`<b>${f.properties.inspection_id}</b> (${f.properties.type})<br>vineyard_id: ${f.properties.vineyard_id} · row_id: ${f.properties.row_id}<br>gap: ${fmt(f.properties.gap_m,1)} m<br>E ${f.properties.x}, N ${f.properties.y}`)}).addTo(map);}
+  if(route){over['Walking route']=L.geoJSON(route,{style:{color:'#ffd400',weight:4,opacity:.95}}).addTo(map);}
+  if(lawn){over['Lawnmower route (alternative)']=L.geoJSON(lawn,{style:{color:'#00e5ff',weight:3,opacity:.9,dashArray:'6 4'}});}
+  if(start){over['Start point']=L.geoJSON(start,{pointToLayer:(f,ll)=>L.marker(ll).bindTooltip('Start / finish',{permanent:true,direction:'top'})}).addTo(map);}
+  L.control.layers({'Esri imagery':esri,'OpenStreetMap':osm},over,{collapsed:true}).addTo(map);
+  L.control.scale({imperial:false}).addTo(map);
+  const fit=()=>{map.invalidateSize();map.fitBounds((blocks?L.geoJSON(blocks):over['Orthomosaic (Sireț3)']).getBounds())};let tries=0;const iv=setInterval(()=>{map.invalidateSize();if(map.getSize().x>50&&document.visibilityState==='visible'){fit();if(++tries>2)clearInterval(iv)}},400);
+
+  const M=csv(mtxt),tot=M.find(r=>r.level==='total'),B=M.filter(r=>r.level==='block'),R=M.filter(r=>r.level==='row');
+  const rp=route&&route.features[0]?route.features[0].properties:null;
+  document.getElementById('kpis').innerHTML=`
+   <div class="kpi"><b>${fmt(tot.n_blocks)}</b><span>vineyard blocks</span></div>
+   <div class="kpi"><b>${fmt(tot.n_rows)}</b><span>rows</span></div>
+   <div class="kpi"><b>${fmt(tot.row_length_m)} m</b><span>total row length</span></div>
+   <div class="kpi"><b>${fmt(tot.canopy_area_m2)} m²</b><span>canopy · ${fmt(tot.canopy_area_ha,3)} ha</span></div>
+   <div class="kpi"><b>${fmt(tot.interrow_area_m2)} m²</b><span>inter-row · ${fmt(tot.interrow_area_ha,3)} ha</span></div>
+   <div class="kpi"><b>${waste?waste.features.length:0} / ${insp?insp.features.length:0}</b><span>waste / inspection</span></div>
+   ${rp?`<div class="kpi route"><b>${fmt(rp.length_m)} m · ${fmt(rp.walk_minutes_4kmh,0)} min</b><span>walking route (4 km/h) · ${rp.n_targets} targets</span></div>`:''}`;
+  document.getElementById('tb-blocks').innerHTML=B.map(b=>`<tr data-v="${b.vineyard_id}"><td>${b.vineyard_id}</td><td>${fmt(b.n_rows)}</td><td>${fmt(b.row_length_m,1)}</td><td>${fmt(b.canopy_area_m2,1)}</td><td>${fmt(b.interrow_area_m2,1)}</td></tr>`).join('');
+  const drawRows=q=>{q=(q||'').toLowerCase();document.getElementById('tb-rows').innerHTML=R.filter(r=>!q||r.row_id===q||r.vineyard_id===q||r.row_structure.startsWith(q)).map(r=>`<tr data-r="${r.row_id}"><td>${r.row_id}</td><td>${r.vineyard_id}</td><td>${fmt(r.row_length_m,2)}</td><td style="color:${rowCol[r.row_structure]}">${r.row_structure}</td></tr>`).join('')};
+  drawRows();document.getElementById('rowq').oninput=e=>drawRows(e.target.value);
+  document.getElementById('tb-blocks').onclick=e=>{const tr=e.target.closest('tr');if(tr&&blockLayers[tr.dataset.v])map.fitBounds(blockLayers[tr.dataset.v].getBounds())};
+  document.getElementById('tb-rows').onclick=e=>{const tr=e.target.closest('tr');const l=tr&&rowLayers[tr.dataset.r];if(l){map.fitBounds(l.getBounds(),{maxZoom:21});l.openPopup()}};
+  if(rp){
+    const tg={};(insp?insp.features:[]).forEach(f=>tg[f.properties.inspection_id]=f);(waste?waste.features:[]).forEach(f=>tg[f.properties.waste_id]=f);
+    const lp=lawn&&lawn.features[0]?lawn.features[0].properties:null;
+    document.getElementById('routeinfo').innerHTML=(lp?`<p style="margin:4px 0 8px;padding:6px 8px;background:#e6fbff;border-radius:6px"><b>Lawnmower alternative</b>: ${fmt(lp.length_m)} m · rows covered ${lp.rows_covered} · inspection ${lp.inspection_covered} · ${fmt(lp.outside_passable_pct,1)} % outside passable (turn it on in the layer menu, top right)</p>`:'')+`<p style="margin:4px 0 8px">Length <b>${fmt(rp.length_m,1)} m</b> · ${rp.n_targets} targets · ${rp.start}<br><span style="color:var(--mute)">${rp.passable_rule}${rp.unreachable?' · unreachable: '+rp.unreachable:''}</span></p>`;
+    document.getElementById('tb-route').innerHTML=(rp.visit_order||'').split(',').filter(Boolean).map((id,i)=>{const p=tg[id]?tg[id].properties:{};return `<tr data-id="${id}"><td>${i+1}</td><td>${id}</td><td>${p.vineyard_id??''}</td><td>${p.row_id??''}</td></tr>`}).join('');
+    document.getElementById('tb-route').onclick=e=>{const tr=e.target.closest('tr');const f=tr&&tg[tr.dataset.id];if(f)map.fitBounds(L.geoJSON(f).getBounds().pad(0.5),{maxZoom:21})};
+  }
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));['blocks','rows','route'].forEach(t=>document.getElementById('tab-'+t).hidden=t!==b.dataset.t)});
+  document.getElementById('note').textContent=`Areas/lengths computed in EPSG:32635 (horizontal). ${meta?meta.n_tiles+' tiles processed.':''}`;
+})();
+</script>
+</body>
+</html>

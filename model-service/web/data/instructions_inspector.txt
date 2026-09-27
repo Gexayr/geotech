@@ -1,0 +1,404 @@
+INSPECTOR ROUTE - 10168.0 m, about 152.5 min; 68 problem spots
+
+Leg 1: START -> W0030 (650.0 m, total 650.0 m)
+   1. Head and walk 60 m north along the path.
+   2. Bear left and walk 4 m north-west along the path.
+   3. Bear right and walk 12 m north along the path.
+   4. Continue straight and walk 167 m north along the path.
+   5. Bear left and walk 336 m north-west along the path.
+   6. Turn left and walk 66 m south along the path.
+   7. Bear left and walk 6 m south-east along the path.
+   -> Arrive at waste W0030 (block V07) - collect it.
+
+Leg 2: W0030 -> I0062 (10.2 m, total 660.2 m)
+   1. Bear right and walk 7 m south along the path.
+   2. Bear right and walk 3 m south-west along the path.
+   -> Arrive at inspection point I0062: row gap of 5.2 m in row V07-R003 (block V07) - check for missing or dead vines. Also here (within 2 m): inspection point I0063: row gap of 5.3 m in row V07-R004 (block V07) - check for missing or dead vines.
+
+Leg 3: I0062 -> W0029 (13.1 m, total 673.3 m)
+   1. Turn right and walk 13 m north along the path.
+   -> Arrive at waste W0029 (block V07) - collect it.
+
+Leg 4: W0029 -> I0047 (261.4 m, total 934.7 m)
+   1. Continue straight and walk 56 m north along the path.
+   2. Bear left and walk 5 m north-west along the path.
+   3. Bear right and walk 11 m north along the path.
+   4. Bear left and walk 7 m north-west along the path.
+   5. Turn left and walk 25 m west along the path.
+   6. Turn right and walk 153 m north-west along the path.
+   7. Bear right and walk 5 m north-east along an inter-row of block V04.
+   -> Arrive at inspection point I0047: row gap of 6.4 m in row V04-R244 (block V04) - check for missing or dead vines.
+
+Leg 5: I0047 -> I0051 (86.3 m, total 1021.0 m)
+   1. Turn around and walk 6 m south-west along an inter-row of block V04.
+   2. Bear left and walk 75 m south along the path.
+   3. Turn around and walk 5 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0051: row gap of 12.1 m in row V04-R274 (block V04) - check for missing or dead vines.
+
+Leg 6: I0051 -> I0055 (212.3 m, total 1233.3 m)
+   1. Turn around and walk 16 m south-east along the path.
+   2. Bear right and walk 5 m south along the path.
+   3. Bear left and walk 11 m south-east along the path.
+   4. Bear right and walk 6 m south along the path.
+   5. Bear left and walk 10 m south-east along the path.
+   6. Bear right and walk 7 m south along the path.
+   7. Bear left and walk 9 m south-east along the path.
+   8. Continue straight and walk 28 m south-east along the path.
+   9. Turn right and walk 70 m south-west along the path.
+   10. Bear left and walk 8 m south-west along the path.
+   11. Bear right and walk 13 m west along the path.
+   12. Bear left and walk 16 m south-west along the path.
+   13. Turn right and walk 16 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0055: row gap of 9.7 m in row V04-R318 (block V04) - check for missing or dead vines.
+
+Leg 7: I0055 -> I0053 (132.8 m, total 1366.1 m)
+   1. Continue straight and walk 90 m north-west along an inter-row of block V04.
+   2. Turn around and walk 43 m south-east along an inter-row of block V04.
+   -> Arrive at inspection point I0053: row gap of 16.4 m in row V04-R316 (block V04) - check for missing or dead vines.
+
+Leg 8: I0053 -> I0054 (33.6 m, total 1399.7 m)
+   1. Turn around and walk 34 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0054: row gap of 6.5 m in row V04-R316 (block V04) - check for missing or dead vines.
+
+Leg 9: I0054 -> W0023 (269.0 m, total 1668.7 m)
+   1. Continue straight and walk 10 m north-west along an inter-row of block V04.
+   2. Turn around and walk 105 m south-east along an inter-row of block V04.
+   3. Turn left and walk 155 m north-east along the path.
+   -> Arrive at waste W0023 (block V04) - collect it.
+
+Leg 10: W0023 -> W0022 (54.6 m, total 1723.3 m)
+   1. Continue straight and walk 26 m north-east along the path.
+   2. Bear right and walk 6 m east across open ground.
+   3. Bear left and walk 23 m north-east along the path.
+   -> Arrive at waste W0022 (block V04) - collect it.
+
+Leg 11: W0022 -> W0021 (10.1 m, total 1733.4 m)
+   1. Continue straight and walk 10 m north-east along the path.
+   -> Arrive at waste W0021 (block V04) - collect it.
+
+Leg 12: W0021 -> I0003 (78.4 m, total 1811.8 m)
+   1. Continue straight and walk 49 m north-east along the path.
+   2. Bear left and walk 4 m north along the path.
+   3. Bear left and walk 10 m north-west along the path.
+   4. Bear right and walk 17 m north along the path.
+   -> Arrive at inspection point I0003: row gap of 13.5 m in row V04-R016 (block V04) - check for missing or dead vines.
+
+Leg 13: I0003 -> W0015 (33.8 m, total 1845.6 m)
+   1. Turn around and walk 19 m south along the path.
+   2. Bear left and walk 11 m south-east along the path.
+   3. Turn right and walk 4 m south-west along the path.
+   -> Arrive at waste W0015 (block V04) - collect it.
+
+Leg 14: W0015 -> I0022 (176.2 m, total 2021.8 m)
+   1. Continue straight and walk 19 m south-west along the path.
+   2. Bear right and walk 3 m west along the path.
+   3. Bear left and walk 34 m south-west along the path.
+   4. Turn right and walk 13 m north-west along an inter-row of block V04.
+   5. Bear right and walk 5 m north along an inter-row of block V04.
+   6. Bear left and walk 98 m north along an inter-row of block V04.
+   7. Bear right and walk 3 m north along an inter-row of block V04.
+   -> Arrive at inspection point I0022: row gap of 6.0 m in row V04-R065 (block V04) - check for missing or dead vines.
+
+Leg 15: I0022 -> I0019 (19.0 m, total 2040.8 m)
+   1. Continue straight and walk 6 m north along an inter-row of block V04.
+   2. Bear left and walk 13 m north along an inter-row of block V04.
+   -> Arrive at inspection point I0019: row gap of 6.3 m in row V04-R058 (block V04) - check for missing or dead vines.
+
+Leg 16: I0019 -> I0020 (16.8 m, total 2057.6 m)
+   1. Continue straight and walk 17 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0020: row gap of 5.6 m in row V04-R058 (block V04) - check for missing or dead vines.
+
+Leg 17: I0020 -> I0021 (34.3 m, total 2091.9 m)
+   1. Turn around and walk 34 m south along an inter-row of block V04.
+   -> Arrive at inspection point I0021: row gap of 8.2 m in row V04-R061 (block V04) - check for missing or dead vines. Also here (within 2 m): inspection point I0023: row gap of 8.3 m in row V04-R068 (block V04) - check for missing or dead vines.
+
+Leg 18: I0021 -> I0024 (105.9 m, total 2197.8 m)
+   1. Bear right and walk 5 m south along an inter-row of block V04.
+   2. Bear left and walk 101 m south along an inter-row of block V04.
+   -> Arrive at inspection point I0024: row gap of 5.2 m in row V04-R073 (block V04) - check for missing or dead vines.
+
+Leg 19: I0024 -> I0025 (149.7 m, total 2347.5 m)
+   1. Continue straight and walk 16 m south along an inter-row of block V04.
+   2. Turn right and walk 8 m south-west along the path.
+   3. Turn right and walk 126 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0025: row gap of 5.7 m in row V04-R076 (block V04) - check for missing or dead vines. Also here (within 2 m): inspection point I0027: row gap of 5.6 m in row V04-R081 (block V04) - check for missing or dead vines.
+
+Leg 20: I0025 -> I0029 (84.7 m, total 2432.2 m)
+   1. Turn left and walk 11 m south along the path.
+   2. Bear left and walk 73 m south-east along an inter-row of block V04.
+   -> Arrive at inspection point I0029: row gap of 5.8 m in row V04-R085 (block V04) - check for missing or dead vines.
+
+Leg 21: I0029 -> I0031 (65.9 m, total 2498.1 m)
+   1. Turn around and walk 66 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0031: row gap of 6.7 m in row V04-R087 (block V04) - check for missing or dead vines.
+
+Leg 22: I0031 -> I0030 (7.2 m, total 2505.3 m)
+   1. Continue straight and walk 7 m north along an inter-row of block V04.
+   -> Arrive at inspection point I0030: row gap of 6.5 m in row V04-R085 (block V04) - check for missing or dead vines.
+
+Leg 23: I0030 -> I0037 (272.6 m, total 2777.9 m)
+   1. Continue straight and walk 7 m north along the path.
+   2. Bear right and walk 4 m north-east along the path.
+   3. Turn right and walk 124 m south along an inter-row of block V04.
+   4. Turn right and walk 15 m south-west along the path.
+   5. Bear right and walk 14 m west along the path.
+   6. Bear left and walk 7 m south-west along the path.
+   7. Turn right and walk 102 m north along an inter-row of block V04.
+   -> Arrive at inspection point I0037: row gap of 9.2 m in row V04-R109 (block V04) - check for missing or dead vines.
+
+Leg 24: I0037 -> I0042 (117.1 m, total 2895.0 m)
+   1. Turn around and walk 102 m south along an inter-row of block V04.
+   2. Turn right and walk 9 m south-west along the path.
+   3. Turn right and walk 6 m north-west along an inter-row of block V04.
+   -> Arrive at inspection point I0042: row gap of 6.8 m in row V04-R155 (block V04) - check for missing or dead vines.
+
+Leg 25: I0042 -> W0041 (409.0 m, total 3304.0 m)
+   1. Turn around and walk 10 m south-east along an inter-row of block V04.
+   2. Turn right and walk 4 m west along the path.
+   3. Bear left and walk 15 m south-west along the path.
+   4. Bear left and walk 4 m south along the path.
+   5. Bear left and walk 200 m south-east along the path.
+   6. Bear left and walk 6 m east along the path.
+   7. Bear right and walk 107 m south-east across open ground.
+   8. Bear right and walk 20 m south along the path.
+   9. Turn around and walk 38 m north along the path.
+   10. Bear left and walk 6 m north-west along the path.
+   -> Arrive at waste W0041 (block V08) - collect it.
+
+Leg 26: W0041 -> W0037 (27.7 m, total 3331.7 m)
+   1. Bear right and walk 18 m north along the path.
+   2. Bear left and walk 9 m north-west along the path.
+   -> Arrive at waste W0037 (block -) - collect it.
+
+Leg 27: W0037 -> I0084 (70.9 m, total 3402.6 m)
+   1. Turn left and walk 33 m south along the path.
+   2. Turn left and walk 14 m east along an inter-row of block V08.
+   3. Turn left and walk 4 m north across open ground.
+   4. Turn right and walk 20 m east along an inter-row of block V08.
+   -> Arrive at inspection point I0084: row gap of 18.4 m in row V08-R014 (block V08) - check for missing or dead vines.
+
+Leg 28: I0084 -> I0085 (16.8 m, total 3419.4 m)
+   1. Turn around and walk 17 m west along an inter-row of block V08.
+   -> Arrive at inspection point I0085: row gap of 8.0 m in row V08-R014 (block V08) - check for missing or dead vines.
+
+Leg 29: I0085 -> W0042 (20.7 m, total 3440.1 m)
+   1. Continue straight and walk 3 m west along an inter-row of block V08.
+   2. Turn left and walk 4 m south across open ground.
+   3. Turn right and walk 14 m west along an inter-row of block V08.
+   -> Arrive at waste W0042 (block V08) - collect it.
+
+Leg 30: W0042 -> I0075 (511.0 m, total 3951.1 m)
+   1. Turn left and walk 52 m south along the path.
+   2. Bear left and walk 12 m south-east along the path.
+   3. Continue straight and walk 97 m south along the path.
+   4. Turn right and walk 4 m west along the path.
+   5. Bear right and walk 297 m north-west along the path.
+   6. Turn left and walk 34 m south along the path.
+   7. Turn right and walk 16 m west along an inter-row of block V07.
+   -> Arrive at inspection point I0075: row gap of 5.2 m in row V07-R052 (block V07) - check for missing or dead vines.
+
+Leg 31: I0075 -> I0076 (49.9 m, total 4001.0 m)
+   1. Continue straight and walk 50 m north-west along an inter-row of block V07.
+   -> Arrive at inspection point I0076: row gap of 5.8 m in row V07-R052 (block V07) - check for missing or dead vines.
+
+Leg 32: I0076 -> I0074 (11.9 m, total 4012.9 m)
+   1. Turn right and walk 2 m north along an inter-row of block V07.
+   2. Bear left and walk 10 m north-west along an inter-row of block V07.
+   -> Arrive at inspection point I0074: row gap of 6.9 m in row V07-R050 (block V07) - check for missing or dead vines.
+
+Leg 33: I0074 -> I0073 (31.6 m, total 4044.5 m)
+   1. Turn around and walk 32 m south-east along an inter-row of block V07.
+   -> Arrive at inspection point I0073: row gap of 7.1 m in row V07-R050 (block V07) - check for missing or dead vines.
+
+Leg 34: I0073 -> I0072 (36.0 m, total 4080.5 m)
+   1. Continue straight and walk 36 m south-east along an inter-row of block V07.
+   -> Arrive at inspection point I0072: row gap of 5.0 m in row V07-R050 (block V07) - check for missing or dead vines.
+
+Leg 35: I0072 -> I0099 (750.0 m, total 4830.5 m)
+   1. Continue straight and walk 10 m east along an inter-row of block V07.
+   2. Turn right and walk 108 m south along the path.
+   3. Bear left and walk 293 m south-east along the path.
+   4. Turn left and walk 11 m north-east along the path.
+   5. Turn right and walk 96 m south-east along an inter-row of block V10.
+   6. Turn left and walk 119 m east along the path.
+   7. Turn right and walk 113 m south-east along an inter-row of block V10.
+   -> Arrive at inspection point I0099: row gap of 5.7 m in row V10-R037 (block V10) - check for missing or dead vines.
+
+Leg 36: I0099 -> I0106 (259.1 m, total 5089.6 m)
+   1. Turn around and walk 113 m north-west along an inter-row of block V10.
+   2. Turn left and walk 117 m west along the path.
+   3. Turn right and walk 29 m north-west along an inter-row of block V10.
+   -> Arrive at inspection point I0106: row gap of 5.1 m in row V10-R153 (block V10) - check for missing or dead vines.
+
+Leg 37: I0106 -> I0107 (43.7 m, total 5133.3 m)
+   1. Continue straight and walk 44 m north-west along an inter-row of block V10.
+   -> Arrive at inspection point I0107: row gap of 5.8 m in row V10-R153 (block V10) - check for missing or dead vines.
+
+Leg 38: I0107 -> I0147 (644.8 m, total 5778.1 m)
+   1. Continue straight and walk 11 m north along the path.
+   2. Bear left and walk 12 m north-west along the path.
+   3. Turn left and walk 89 m south along the path.
+   4. Bear left and walk 530 m south-east along the path.
+   5. Turn right and walk 3 m south-west across open ground.
+   -> Arrive at inspection point I0147: row gap of 26.6 m in row V15-R001 (block V15) - check for missing or dead vines.
+
+Leg 39: I0147 -> I0148 (36.8 m, total 5814.9 m)
+   1. Turn around and walk 3 m north-east across open ground.
+   2. Turn right and walk 12 m south-east along the path.
+   3. Turn right and walk 5 m south-west across open ground.
+   4. Turn right and walk 17 m north-west along an inter-row of block V15.
+   -> Arrive at inspection point I0148: row gap of 8.3 m in row V15-R004 (block V15) - check for missing or dead vines.
+
+Leg 40: I0148 -> I0152 (5.4 m, total 5820.3 m)
+   1. Continue straight and walk 5 m north-west along an inter-row of block V15.
+   -> Arrive at inspection point I0152: row gap of 18.9 m in row V15-R005 (block V15) - check for missing or dead vines.
+
+Leg 41: I0152 -> I0149 (7.4 m, total 5827.7 m)
+   1. Bear right and walk 7 m north-west along an inter-row of block V15.
+   -> Arrive at inspection point I0149: row gap of 10.2 m in row V15-R004 (block V15) - check for missing or dead vines.
+
+Leg 42: I0149 -> I0151 (31.8 m, total 5859.5 m)
+   1. Turn around and walk 32 m south-east along an inter-row of block V15.
+   -> Arrive at inspection point I0151: row gap of 6.3 m in row V15-R005 (block V15) - check for missing or dead vines.
+
+Leg 43: I0151 -> I0162 (516.8 m, total 6376.3 m)
+   1. Continue straight and walk 27 m south-east along an inter-row of block V15.
+   2. Turn left and walk 14 m east along the path.
+   3. Bear right and walk 52 m south-east along the path.
+   4. Bear left and walk 9 m east along the path.
+   5. Bear left and walk 82 m north-east across open ground.
+   6. Turn right and walk 166 m south-east along the path.
+   7. Turn left and walk 62 m north-east along the path.
+   8. Continue straight and walk 104 m north-east along the path.
+   -> Arrive at inspection point I0162: row gap of 6.4 m in row V16-R019 (block V16) - check for missing or dead vines.
+
+Leg 44: I0162 -> I0160 (3.2 m, total 6379.5 m)
+   1. Continue straight and walk 3 m north-east along an inter-row of block V16.
+   -> Arrive at inspection point I0160: row gap of 5.7 m in row V16-R018 (block V16) - check for missing or dead vines.
+
+Leg 45: I0160 -> I0159 (8.4 m, total 6387.9 m)
+   1. Continue straight and walk 8 m north along the path.
+   -> Arrive at inspection point I0159: row gap of 5.5 m in row V16-R014 (block V16) - check for missing or dead vines.
+
+Leg 46: I0159 -> I0161 (27.7 m, total 6415.6 m)
+   1. Turn around and walk 12 m south along the path.
+   2. Bear left and walk 16 m south-east along an inter-row of block V16.
+   -> Arrive at inspection point I0161: row gap of 8.0 m in row V16-R019 (block V16) - check for missing or dead vines.
+
+Leg 47: I0161 -> I0178 (310.1 m, total 6725.7 m)
+   1. Turn around and walk 17 m north-west along an inter-row of block V16.
+   2. Turn left and walk 167 m south-west along the path.
+   3. Turn left and walk 83 m south-east along the path.
+   4. Turn right and walk 6 m south-west across open ground.
+   5. Bear left and walk 4 m south along an inter-row of block V20.
+   6. Bear right and walk 34 m south-west along an inter-row of block V20.
+   -> Arrive at inspection point I0178: row gap of 8.8 m in row V20-R014 (block V20) - check for missing or dead vines.
+
+Leg 48: I0178 -> I0177 (3.4 m, total 6729.1 m)
+   1. Turn right and walk 3 m north-west along an inter-row of block V20.
+   -> Arrive at inspection point I0177: row gap of 13.2 m in row V20-R013 (block V20) - check for missing or dead vines.
+
+Leg 49: I0177 -> W0076 (612.7 m, total 7341.8 m)
+   1. Turn right and walk 42 m north-east along an inter-row of block V20.
+   2. Bear right and walk 4 m east along the path.
+   3. Bear right and walk 51 m south-east along the path.
+   4. Turn left and walk 59 m north along the path.
+   5. Bear right and walk 16 m north-east along the path.
+   6. Bear right and walk 9 m east along the path.
+   7. Bear right and walk 10 m south-east along the path.
+   8. Turn left and walk 113 m north-east along the path.
+   9. Turn right and walk 309 m south along the path.
+   -> Arrive at waste W0076 (block V24) - collect it.
+
+Leg 50: W0076 -> I0155 (527.7 m, total 7869.5 m)
+   1. Turn around and walk 60 m north-west along the path.
+   2. Continue straight and walk 245 m north along the path.
+   3. Bear left and walk 5 m north-west along the path.
+   4. Turn left and walk 113 m south-west along the path.
+   5. Bear right and walk 6 m west along the path.
+   6. Bear right and walk 13 m north-west along the path.
+   7. Turn right and walk 86 m north along the path.
+   -> Arrive at inspection point I0155: row gap of 6.0 m in row V16-R006 (block V16) - check for missing or dead vines.
+
+Leg 51: I0155 -> I0140 (524.0 m, total 8393.5 m)
+   1. Turn around and walk 158 m south along the path.
+   2. Bear right and walk 6 m south-west along the path.
+   3. Bear right and walk 4 m west along the path.
+   4. Bear right and walk 297 m north-west along the path.
+   5. Bear right and walk 12 m north across open ground.
+   6. Turn right and walk 35 m north-east along the path.
+   7. Turn left and walk 12 m north-west along an inter-row of block V14.
+   -> Arrive at inspection point I0140: row gap of 6.2 m in row V14-R056 (block V14) - check for missing or dead vines.
+
+Leg 52: I0140 -> I0141 (8.2 m, total 8401.7 m)
+   1. Continue straight and walk 8 m north-west along an inter-row of block V14.
+   -> Arrive at inspection point I0141: row gap of 6.3 m in row V14-R056 (block V14) - check for missing or dead vines.
+
+Leg 53: I0141 -> I0142 (111.8 m, total 8513.5 m)
+   1. Continue straight and walk 112 m north-west along the path.
+   -> Arrive at inspection point I0142: row gap of 5.0 m in row V14-R058 (block V14) - check for missing or dead vines.
+
+Leg 54: I0142 -> I0143 (11.4 m, total 8524.9 m)
+   1. Continue straight and walk 11 m north-west along the path.
+   -> Arrive at inspection point I0143: row gap of 10.1 m in row V14-R058 (block V14) - check for missing or dead vines.
+
+Leg 55: I0143 -> I0144 (12.1 m, total 8537.0 m)
+   1. Continue straight and walk 12 m north-west along the path.
+   -> Arrive at inspection point I0144: row gap of 7.0 m in row V14-R058 (block V14) - check for missing or dead vines.
+
+Leg 56: I0144 -> I0139 (103.8 m, total 8640.8 m)
+   1. Continue straight and walk 62 m north-west along the path.
+   2. Bear right and walk 10 m north along the path.
+   3. Bear left and walk 28 m north-west along the path.
+   4. Bear right and walk 3 m north across open ground.
+   -> Arrive at inspection point I0139: row gap of 6.3 m in row V14-R053 (block V14) - check for missing or dead vines.
+
+Leg 57: I0139 -> I0134 (57.4 m, total 8698.2 m)
+   1. Turn around and walk 9 m south along the path.
+   2. Bear left and walk 49 m south-east along the path.
+   -> Arrive at inspection point I0134: row gap of 6.8 m in row V14-R050 (block V14) - check for missing or dead vines.
+
+Leg 58: I0134 -> I0138 (28.0 m, total 8726.2 m)
+   1. Turn right and walk 5 m south along the path.
+   2. Turn left and walk 23 m south-east along the path.
+   -> Arrive at inspection point I0138: row gap of 5.2 m in row V14-R051 (block V14) - check for missing or dead vines.
+
+Leg 59: I0138 -> I0137 (9.6 m, total 8735.8 m)
+   1. Continue straight and walk 10 m south-east along the path.
+   -> Arrive at inspection point I0137: row gap of 6.9 m in row V14-R051 (block V14) - check for missing or dead vines.
+
+Leg 60: I0137 -> I0136 (32.7 m, total 8768.5 m)
+   1. Continue straight and walk 33 m south-east along an inter-row of block V14.
+   -> Arrive at inspection point I0136: row gap of 7.3 m in row V14-R051 (block V14) - check for missing or dead vines.
+
+Leg 61: I0136 -> I0135 (10.1 m, total 8778.6 m)
+   1. Bear right and walk 5 m south along the path.
+   2. Bear left and walk 5 m south-east along the path.
+   -> Arrive at inspection point I0135: row gap of 10.2 m in row V14-R051 (block V14) - check for missing or dead vines.
+
+Leg 62: I0135 -> I0096 (694.4 m, total 9473.0 m)
+   1. Continue straight and walk 129 m south-east along an inter-row of block V14.
+   2. Turn left and walk 67 m north-east along the path.
+   3. Bear left and walk 12 m north along the path.
+   4. Bear left and walk 486 m north-west along the path.
+   -> Arrive at inspection point I0096: row gap of 36.0 m in row V10-R012 (block V10) - check for missing or dead vines.
+
+Leg 63: I0096 -> I0097 (36.1 m, total 9509.1 m)
+   1. Bear right and walk 7 m north along the path.
+   2. Bear left and walk 29 m north-west along the path.
+   -> Arrive at inspection point I0097: row gap of 27.3 m in row V10-R012 (block V10) - check for missing or dead vines.
+
+Leg 64: I0097 -> I0098 (102.4 m, total 9611.5 m)
+   1. Bear right and walk 10 m north along the path.
+   2. Bear left and walk 83 m north-west along the path.
+   3. Bear left and walk 10 m west along the path.
+   -> Arrive at inspection point I0098: row gap of 5.3 m in row V10-R019 (block V10) - check for missing or dead vines.
+
+Leg 65: I0098 -> I0102 (35.2 m, total 9646.7 m)
+   1. Continue straight and walk 35 m west along the path.
+   -> Arrive at inspection point I0102: row gap of 5.0 m in row V10-R044 (block V10) - check for missing or dead vines.
+
+Leg 66: I0102 -> START (104.1 m, total 9750.8 m)
+   1. Continue straight and walk 104 m west along the path.
+   -> Arrive at the start point (route finished).
+

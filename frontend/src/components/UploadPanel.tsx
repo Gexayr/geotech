@@ -48,8 +48,7 @@ export function UploadPanel({ onUploaded }: { onUploaded: (uploadedFilenames: st
       <h3>Upload your field</h3>
       <div className="route-note" style={{ marginBottom: 8 }}>
         Up to {MAX_FILES} georeferenced .tif/.tiff tiles — detected on the spot with the
-        same classical-CV fallback used for the rest of the site (no trained model).
-        Route planning isn't available for uploaded fields (no passages/forbidden data).
+        model service (classical CV as a fallback when it's unavailable).
       </div>
 
       <input

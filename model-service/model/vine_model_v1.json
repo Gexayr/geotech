@@ -1,0 +1,51 @@
+{
+  "name": "siret3-vine-classical",
+  "version": "3.0",
+  "created": "2026-09-26",
+  "method": "classical CV: ExG + windowed FFT row periodicity, projection-histogram row angle, chunked peak tracking, CIVE vegetation index + Otsu canopy, occupancy-profile plant splitting, colour-anomaly waste, grid Dijkstra + 2-opt/Or-opt TSP routing",
+  "calibrated_on": "Sire\u021b3 example tiles r021_c012, r006_c004 (reference annotations)",
+  "params": {
+    "candidates": {
+      "RES": 0.2,
+      "N": 64,
+      "S": 8,
+      "NS": 18
+    },
+    "rows": {
+      "RES": 0.05,
+      "CHUNK_M": 5.0,
+      "GAP_INSPECT_M": 5.0,
+      "TREE_OPEN_M": 2.0,
+      "T_CANOPY_BAND": 0.08,
+      "MIN_BRIGHT": 120,
+      "PLANT_JOIN_M": 0.8,
+      "CUT_GAP_M": 2.5,
+      "CUT_MIN_ROWS": 5,
+      "PLANT_MIN_M": 0.25,
+      "PLANT_SPLIT": "profile",
+      "PLANT_SPLIT_LEN": 1.8,
+      "PLANT_MIN_SEP": 0.9,
+      "PLANT_SP_MIN": 1.0,
+      "CLF_THRESHOLD": 0.5,
+      "CANOPY_MODE": "cive",
+      "CIVE_ROW_WEIGHT": 0.0
+    },
+    "waste": {
+      "RES": 0.05
+    },
+    "route": {
+      "RES": 0.5,
+      "VISIT_M": 2.0,
+      "CONNECT_M": 5.0,
+      "CONNECT_COST": 150.0,
+      "MERGE_M": 1.5,
+      "MAX_OUTSIDE": 0.018,
+      "TSP_TIME_S": 20
+    },
+    "cvat": {
+      "GAP_DISRUPT_M": 5.0,
+      "COVER_RES": 0.1,
+      "VEG_EXG": 0.1
+    }
+  }
+}

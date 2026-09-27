@@ -9,10 +9,14 @@ geometry. See app/data/real_site.py and app/services/cvat_import.py.
 import csv
 import io
 import json
+import logging
 import os
+import threading
 import uuid
 
 import rasterio
+from typing import Literal
+
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
@@ -20,10 +24,12 @@ from app.data import real_site
 from app.schemas.geo import CustomBlockCreate, CustomRouteRequest, FeatureCollection
 from app.services import classical_cv, cvat_export, cvat_import, georef, real_metrics, tile_catalog
 from app.services import custom_blocks as custom_blocks_svc
+from app.services import model_client
 from app.services import measurements as measurements_svc
 from app.services import real_route as real_route_svc
 
 router = APIRouter(prefix="/api/site", tags=["site"])
+log = logging.getLogger(__name__)
 
 _annotated_cache: dict | None = None
 
@@ -40,7 +46,12 @@ def _tiles() -> dict:
     other 309 (see scripts/classical_pre_annotate.py) is on by default and
     can be switched off with `CV_FALLBACK=false` — e.g. to fall back to just
     the known-good 2 tiles if the CV output is too noisy for what you're
-    doing (route target explosion, over-segmented canopies, etc.)."""
+    doing (route target explosion, over-segmented canopies, etc.).
+
+    The model service's detections take over entirely when it is up."""
+    model = _model_tiles()
+    if model is not None:
+        return model
     global _annotated_cache
     if _annotated_cache is None:
         _annotated_cache = (
@@ -48,6 +59,100 @@ def _tiles() -> dict:
         )
         _annotated_cache.update(cvat_import.load_uploaded())
     return _annotated_cache
+
+
+# --- model service (model-service/, see services/model_client.py) ---------
+# When it is up it owns detection, measurements and routes; everything
+# below falls back to the in-process classical CV / our own route code
+# whenever `_model_tiles()` returns None.
+
+_model_cache: dict | None = None  # tile -> internal per-tile data, from /v1/detect
+# Routes take the service ~45-60 s — keep each answer until tiles change.
+_route_cache: dict[str, dict] = {}
+_route_lock = threading.Lock()
+
+
+def _model_tiles() -> dict | None:
+    """Model detections for every catalog tile, converted to our local-plane
+    format, or None when the service isn't available. The service caches
+    per-tile results itself, so asking for all of them is cheap after the
+    first time; IDs are re-stitched site-wide there on every detect/delete,
+    hence one cache for all tiles, dropped whenever the tile set changes."""
+    global _model_cache
+    if not model_client.available():
+        return None
+    if _model_cache is None:
+        names = list(tile_catalog.get_catalog())
+        try:
+            payload = model_client.detect(names)["tiles"] if names else {}
+        except model_client.ModelError as exc:
+            log.warning("Model detect failed, using classical CV: %s", exc.detail)
+            return None
+        _model_cache = {
+            name: cvat_import.from_pixel_detection(name, tile, source="model")
+            for name, tile in payload.items()
+        }
+    return _model_cache
+
+
+def _invalidate_model() -> None:
+    global _model_cache
+    _model_cache = None
+    _route_cache.clear()
+
+
+def _route_from_model(result: dict) -> dict:
+    """/v1/route answer (EPSG:32635) -> the shape the UI already renders."""
+    targets = [
+        {**{k: v for k, v in t.items() if k != "point_world"}, "point": list(real_site.to_local(*t["point_world"]))}
+        for t in result["targets"]
+    ]
+    route = result.get("route")
+    if route is not None:
+        route = {
+            **route,
+            "polyline_local": [list(real_site.to_local(x, y)) for x, y in route["polyline_world"]],
+        }
+    return {"targets": targets, "route": route, "message": result.get("message"), "role": result.get("role")}
+
+
+def _model_route(
+    role: str,
+    tiles: list[str] | None = None,
+    area_local: list[list[float]] | None = None,
+    start_local: list[float] | None = None,
+) -> dict | None:
+    """A cached model-service route, or None to fall back to ours."""
+    if _model_tiles() is None:
+        return None
+    key = json.dumps([role, tiles, area_local, start_local])
+    with _route_lock:
+        if key in _route_cache:
+            return _route_cache[key]
+        try:
+            result = model_client.route(
+                role,
+                tiles=tiles,
+                area_world=[list(real_site.to_world(x, y)) for x, y in area_local] if area_local else None,
+                start_world=list(real_site.to_world(*start_local)) if start_local else None,
+            )
+        except model_client.ModelError as exc:
+            if exc.status is not None and exc.status < 500:
+                raise HTTPException(status_code=exc.status, detail=exc.detail) from exc
+            log.warning("Model route failed, using our own: %s", exc.detail)
+            return None
+        _route_cache[key] = _route_from_model(result)
+        return _route_cache[key]
+
+
+def _model_measurements(tiles: list[str] | None = None) -> dict | None:
+    if _model_tiles() is None:
+        return None
+    try:
+        return model_client.measurements(tiles=tiles)
+    except model_client.ModelError as exc:
+        log.warning("Model measurements failed, using our own: %s", exc.detail)
+        return None
 
 
 def _require_real_tile(tile_name: str) -> None:
@@ -93,18 +198,19 @@ MAX_UPLOAD_MB = 50
 
 @router.post("/upload")
 async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
-    """Operator-supplied GeoTIFF tiles: saved next to the 311 supplied ones,
-    detected on the spot with the same classical-CV fallback used for those
-    (see app/services/classical_cv.py — no route, since a walking route
-    needs passages/forbidden zones this field doesn't have). Georeferencing
-    is mandatory: a tile with no CRS can't be placed on the map or measured
-    in real units, so it's rejected rather than accepted in a degraded mode.
+    """Operator-supplied GeoTIFF tiles: saved next to the 311 supplied ones
+    and detected on the spot — by the model service when it is up (one
+    /v1/detect call for the whole request), otherwise with the in-process
+    classical CV (app/services/classical_cv.py). Georeferencing is
+    mandatory: a tile with no CRS can't be placed on the map or measured in
+    real units, so it's rejected rather than accepted in a degraded mode.
     """
     if len(files) > MAX_UPLOAD_FILES:
         raise HTTPException(status_code=422, detail=f"Max {MAX_UPLOAD_FILES} files per upload")
 
     results = []
     batch_pixel_results: dict[str, dict] = {}  # this request's tiles only — for its own CVAT XML
+    saved: list[str] = []
     for f in files:
         name = f.filename or "unnamed.tif"
         if not name.lower().endswith((".tif", ".tiff")):
@@ -145,13 +251,31 @@ async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
         georef._transform_cache.pop(name, None)
         georef._bounds_cache.pop(name, None)
         (georef.PNG_CACHE_DIR / f"{name}.jpg").unlink(missing_ok=True)
+        saved.append(name)
 
-        pixel_result = classical_cv.process_tile(dest)
+    model_payload: dict[str, dict] = {}
+    if saved and model_client.available():
+        try:
+            response = model_client.detect(saved, force=True)
+            model_payload = response["tiles"]
+            for name, err in response.get("errors", {}).items():
+                log.warning("Model couldn't detect %s (%s), using classical CV", name, err)
+        except model_client.ModelError as exc:
+            log.warning("Model detect failed, using classical CV: %s", exc.detail)
+
+    for name in saved:
+        if name in model_payload:
+            pixel_result, source = model_payload[name], "model"
+        else:
+            pixel_result, source = classical_cv.process_tile(tile_catalog.TILES_DIR / name), "uploaded"
         batch_pixel_results[name] = pixel_result
 
-        tile_data = cvat_import.from_pixel_detection(name, pixel_result, source="uploaded")
+        tile_data = cvat_import.from_pixel_detection(name, pixel_result, source=source)
+        # Also kept on disk so the tile still has layers if the model service
+        # is down later (classical-CV fallback path reads these back).
         cvat_import.save_uploaded(name, tile_data)
-        _tiles()[name] = tile_data  # merge into the live cache _tiles() already returned
+        if _annotated_cache is not None:
+            _annotated_cache[name] = tile_data
 
         results.append(
             {
@@ -162,6 +286,9 @@ async def upload_tiles(files: list[UploadFile] = File(...)) -> dict:
                 "interrows": len(tile_data["interrows"]),
             }
         )
+
+    if saved:
+        _invalidate_model()  # new tiles re-stitch IDs site-wide on the model side
 
     annotation_xml_url = None
     if batch_pixel_results:
@@ -242,6 +369,9 @@ def get_tile_layers(tile_name: str) -> dict[str, FeatureCollection]:
 @router.get("/tiles/{tile_name}/metrics")
 def get_tile_metrics(tile_name: str) -> dict:
     _require_real_tile(tile_name)
+    m = _model_measurements([tile_name])
+    if m is not None:
+        return {"tile": tile_name, "blocks": m["blocks"]}
     t = _tiles().get(tile_name, _EMPTY_TILE)
     return {"tile": tile_name, "blocks": real_metrics.compute_tile_metrics(t)}
 
@@ -251,12 +381,12 @@ def get_measurements() -> dict:
     """Aggregated across every currently loaded tile (all pieces of a row or
     block merged by vineyard_id/row_id) — this is the computation behind the
     submission's measurements.csv, exposed as JSON for the UI."""
-    return measurements_svc.compute_measurements(_tiles())
+    return _model_measurements() or measurements_svc.compute_measurements(_tiles())
 
 
 @router.get("/measurements.csv")
 def get_measurements_csv() -> Response:
-    m = measurements_svc.compute_measurements(_tiles())
+    m = _model_measurements() or measurements_svc.compute_measurements(_tiles())
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=measurements_svc.CSV_FIELDS)
     writer.writeheader()
@@ -269,11 +399,14 @@ def get_measurements_csv() -> Response:
 
 
 @router.get("/route")
-def get_real_route() -> dict:
-    """The actual walking route over real passages/forbidden/inter-row
-    geometry, to real derived targets (disrupted rows + waste). Returns
-    route=None with an explanatory message when there are no targets yet in
-    the currently loaded annotations — see app/services/targets.py."""
+def get_real_route(role: Literal["farmer", "auditor"] = "farmer") -> dict:
+    """The walking route for `role` — planned by the model service when it
+    is up (farmer: row gaps + waste; auditor: verification sample), else our
+    own route to derived targets (same for both roles). Returns route=None
+    with an explanatory message when there's nothing to route."""
+    model = _model_route(role)
+    if model is not None:
+        return model
     return real_route_svc.compute_real_route(_tiles())
 
 
@@ -281,8 +414,11 @@ def get_real_route() -> dict:
 def compute_custom_route(body: CustomRouteRequest) -> dict:
     """Operator-controlled route: a custom start point, and/or a scope
     (specific tiles, or a hand-drawn area) restricting which real targets
-    the tour visits. Same pathfinding engine as the default /route — this
-    is not a separate demo path."""
+    the tour visits. Same engine as the default /route — this is not a
+    separate demo path."""
+    model = _model_route(body.role, body.tiles, body.area, body.start)
+    if model is not None:
+        return model
     all_tiles = _tiles()
     scoped = (
         {name: t for name, t in all_tiles.items() if name in body.tiles}
@@ -296,20 +432,24 @@ def compute_custom_route(body: CustomRouteRequest) -> dict:
 
 
 @router.get("/route.geojson")
-def get_route_geojson(tiles: str | None = None) -> Response:
+def get_route_geojson(
+    tiles: str | None = None, role: Literal["farmer", "auditor"] = "farmer"
+) -> Response:
     """The submission artifact: one LineString in EPSG:32635 with a
     length_m property, starting and ending at the real start point.
 
     Optional `?tiles=a.tif,b.tif` scopes it, same as POST /route/custom —
     useful since a single tour across every derived target on the whole
     site isn't a realistic route (see MAX_TARGETS_FOR_ROUTE)."""
-    all_tiles = _tiles()
-    scoped = (
-        {name: t for name, t in all_tiles.items() if name in tiles.split(",")}
-        if tiles
-        else all_tiles
-    )
-    result = real_route_svc.compute_real_route(scoped)
+    result = _model_route(role, tiles.split(",") if tiles else None)
+    if result is None:
+        all_tiles = _tiles()
+        scoped = (
+            {name: t for name, t in all_tiles.items() if name in tiles.split(",")}
+            if tiles
+            else all_tiles
+        )
+        result = real_route_svc.compute_real_route(scoped)
     route = result["route"]
     if route is None:
         raise HTTPException(status_code=404, detail=result["message"])
@@ -365,7 +505,14 @@ def delete_tile(tile_name: str) -> dict:
     georef._transform_cache.pop(tile_name, None)
     georef._bounds_cache.pop(tile_name, None)
     tile_catalog.invalidate()
-    _tiles().pop(tile_name, None)
+    if _annotated_cache is not None:
+        _annotated_cache.pop(tile_name, None)
+    if model_client.MODEL_URL:
+        try:
+            model_client.delete_tile(tile_name)
+        except model_client.ModelError as exc:
+            log.warning("Model service didn't drop %s: %s", tile_name, exc.detail)
+    _invalidate_model()
     return {"deleted": tile_name}
 
 

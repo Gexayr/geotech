@@ -1,0 +1,6 @@
+.venv
+work
+results
+maps
+**/__pycache__
+*.log

@@ -11,6 +11,7 @@ export const LAYER_COLORS = {
   interrows: { stroke: "#38b2ac" },
   waste: { stroke: "#c05621" },
   targets: { stroke: "#805ad5" },
+  auditTargets: { stroke: "#d69e2e" }, // auditor verification points (model service)
   route: { stroke: "#e34948", light: "#f4c3c2" }, // dataviz palette slot 8 (red), + a light tint for "before"
   studyArea: { stroke: "#c3c2b7" },
   passages: { stroke: "#1baf7a", fill: "#1baf7a" },

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vineyard Model Test</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#f5f6f3;--panel:#fff;--ink:#1c2220;--mute:#67716b;--line:#e0e4de;--acc:#2f6f3e;--acc2:#e0a100;--err:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);display:flex;height:100vh}
+#side{width:410px;min-width:330px;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:14px 16px 30px}
+#map{flex:1;background:#222}
+h1{font-size:18px;margin:0 0 2px} .sub{color:var(--mute);font-size:12px;margin-bottom:10px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.step h3{margin:0 0 6px;font-size:13px;display:flex;gap:8px;align-items:center}
+.num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px}
+.step.off{opacity:.45;pointer-events:none}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button.on{background:var(--acc2);border-color:var(--acc2);color:#1c2220}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+input[type=number]{width:80px;padding:5px;border:1px solid var(--line);border-radius:6px;font:inherit}
+.hint{font-size:12px;color:var(--mute);margin-top:6px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.kpi b{display:block;font-size:16px;font-variant-numeric:tabular-nums} .kpi span{font-size:11px;color:var(--mute);text-transform:uppercase}
+.kpi.route{grid-column:1/3;background:#fffaf0;border-color:#e8c46a}
+#log{font:11.5px/1.35 ui-monospace,Consolas,monospace;background:#f3f4f1;border-radius:6px;padding:6px 8px;max-height:150px;overflow:auto;white-space:pre-wrap;margin-top:8px}
+.leg{border-top:1px solid var(--line);padding:6px 0}
+.leg .hd{font-weight:600;cursor:pointer;display:flex;justify-content:space-between}
+.leg ol{margin:4px 0 2px 18px;padding:0} .leg li{cursor:pointer;margin:2px 0} .leg li:hover{color:var(--acc)}
+.arrive{font-size:12.5px;color:#7a4b00;margin:2px 0 0}
+.err{color:var(--err)}
+.opts{display:grid;gap:5px;font-size:12.5px;margin-bottom:8px}.opts select{font:inherit;padding:3px;border:1px solid var(--line);border-radius:6px}
+.rtabs{display:flex;gap:4px;margin:12px 0 4px}.rtabs button{flex:1}.rtabs button.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.kpi.farmer{grid-column:1/3;background:#eef6ff;border-color:#9cc8ff}
+.steps{margin:4px 0 0 18px;padding:0}.steps li{margin:2px 0;cursor:pointer}.steps li:hover{color:var(--acc)} .steps li.work{color:#0a5bd3}
+table.chk{width:100%;border-collapse:collapse;font-size:12px}table.chk td,table.chk th{border-bottom:1px solid var(--line);padding:3px 4px;text-align:left;vertical-align:top}
+table.chk tr{cursor:pointer}
+.legend{font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+a{color:var(--acc)}
+@media (max-width:760px){body{flex-direction:column}#side{width:100%;height:50vh}#map{height:50vh}}
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>Vineyard model test</h1>
+  <div class="sub">Run the Sireț3 model on any image: pick the area, the start point, get the map and the walking instructions. <a href="/">← Sireț3 result map</a></div>
+
+  <div class="step" id="s1">
+    <h3><span class="num">1</span>Image</h3>
+    <div class="row">
+      <input type="file" id="file" accept=".tif,.tiff,.jpg,.jpeg,.png">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label>Ground resolution (only for JPG/PNG) <input type="number" id="gsd" value="0.03" step="0.005" min="0.005"> m/px</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="up" class="pri">Upload</button>
+      <span style="color:var(--mute)">or</span>
+      <button id="sample">Load Sireț3 sample (205 × 205 m)</button>
+    </div>
+    <div class="hint" id="imginfo">GeoTIFF keeps its georeference (lat/lon images are converted to UTM). Best results at 2–5 cm/px.</div>
+  </div>
+
+  <div class="step off" id="s2">
+    <h3><span class="num">2</span>Area to check</h3>
+    <div class="row"><button id="drawArea">Draw area</button><button id="rectArea">Rectangle</button><button id="wholeArea">Whole image</button><button id="clearArea">Clear</button></div>
+    <div class="hint">Polygon: click corners, double-click (or click the first point) to close. Rectangle: click two opposite corners.</div>
+  </div>
+
+  <div class="step off" id="s3">
+    <h3><span class="num">3</span>Start point</h3>
+    <div class="row"><button id="setStart">Click start on map</button><span id="startInfo" class="hint"></span></div>
+  </div>
+
+  <div class="step off" id="s4">
+    <h3><span class="num">4</span>Run the model</h3>
+    <div class="opts">
+      <label><input type="checkbox" id="rFarmer" checked> <b style="color:#0a84ff">Farmer</b> route: work every inter-row</label>
+      <label><input type="checkbox" id="rInsp" checked> <b style="color:#b8860b">Inspector</b> route: visit gaps + waste</label>
+      <label>Farmer turning radius <input type="number" id="turnR" value="0" step="0.5" min="0"> m <span class="hint">(0 = on foot, 3-5 = tractor)</span></label>
+      <label>Farmer lanes <select id="lanes"><option value="all">every inter-row</option><option value="cover">every 2nd (reach each row once)</option></select></label>
+      <label>Inspector time budget <input type="number" id="maxMin" placeholder="none" min="1"> min</label>
+    </div>
+    <div class="row"><button id="run" class="pri">Run model + plan routes</button><a id="dl" href="#" hidden>Download results (.zip)</a></div>
+    <div id="log" hidden></div>
+    <div id="res"></div>
+  </div>
+</div>
+<div id="map"></div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(x,d=0)=>x==null||isNaN(x)?'–':Number(x).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const map=L.map('map',{crs:L.CRS.Simple,minZoom:-5,maxZoom:5,zoomSnap:.25,attributionControl:false,doubleClickZoom:false});
+let IMG=null,imgLayer=null,aoi=null,aoiLayer=null,start=null,startMk=null,mode=null,draft=[],draftLayer=null,resLayers=[],hl=null;
+const ctl=L.control.layers(null,{}, {collapsed:false}).addTo(map);
+function unlock(){['s2','s3','s4'].forEach((s,i)=>$(s).classList.toggle('off', !IMG || (i>=1&&!aoi) || (i>=2&&!start)));}
+function setMode(m){mode=m;['drawArea','rectArea','setStart'].forEach(b=>$(b).classList.toggle('on',(m==='poly'&&b==='drawArea')||(m==='rect'&&b==='rectArea')||(m==='start'&&b==='setStart')));map.getContainer().style.cursor=m?'crosshair':'';draft=[];if(draftLayer){map.removeLayer(draftLayer);draftLayer=null}}
+function showImage(info){
+  IMG=info; [imgLayer,aoiLayer,startMk,...resLayers].forEach(l=>l&&map.removeLayer(l)); resLayers.forEach(l=>ctl.removeLayer(l)); resLayers=[]; aoi=null;start=null;
+  const b=[[-info.preview_h,0],[0,info.preview_w]];
+  imgLayer=L.imageOverlay(`/api/image/${info.id}/preview.jpg`,b).addTo(map); map.fitBounds(b);
+  $('imginfo').innerHTML=`<b>${info.kind}</b> · ${info.width}×${info.height} px · ${fmt(info.gsd_m*100,1)} cm/px · ${fmt(info.size_m[0])}×${fmt(info.size_m[1])} m<br>${info.crs}`;
+  $('res').innerHTML='';$('dl').hidden=true;$('log').hidden=true; unlock();
+}
+$('up').onclick=async()=>{const f=$('file').files[0]; if(!f){alert('Choose an image file first');return}
+  const fd=new FormData(); fd.append('file',f); fd.append('gsd',$('gsd').value); $('imginfo').textContent='Uploading and reading the image…';
+  const r=await fetch('/api/upload',{method:'POST',body:fd}); const j=await r.json(); if(j.error){$('imginfo').innerHTML=`<span class="err">${j.error}</span>`;return} showImage(j);};
+$('sample').onclick=async()=>{$('imginfo').textContent='Cutting a sample from the Sireț3 tiles…'; const r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); showImage(await r.json());};
+function setAoi(pts){ if(aoiLayer)map.removeLayer(aoiLayer); aoi=pts; aoiLayer=L.polygon(pts.map(p=>[-p[1],p[0]]),{color:'#ffd400',weight:2,fillOpacity:.08,dashArray:'6 4'}).addTo(map); setMode(null); unlock();}
+$('drawArea').onclick=()=>setMode('poly'); $('rectArea').onclick=()=>setMode('rect'); $('setStart').onclick=()=>setMode('start');
+$('wholeArea').onclick=()=>{const w=IMG.preview_w,h=IMG.preview_h;setAoi([[0,0],[w,0],[w,h],[0,h]])};
+$('clearArea').onclick=()=>{if(aoiLayer)map.removeLayer(aoiLayer);aoi=null;unlock()};
+map.on('click',e=>{ if(!mode||!IMG)return; const p=[e.latlng.lng,-e.latlng.lat];
+  if(mode==='start'){ start=p; if(startMk)map.removeLayer(startMk); startMk=L.marker(e.latlng).addTo(map).bindTooltip('Start / finish',{permanent:true,direction:'top'}); $('startInfo').textContent='set ✓'; setMode(null); unlock(); return;}
+  if(mode==='rect'){ draft.push(p); if(draft.length===2){const[a,b]=draft; setAoi([[a[0],a[1]],[b[0],a[1]],[b[0],b[1]],[a[0],b[1]]]);} return;}
+  if(mode==='poly'){ if(draft.length>2){const f=map.latLngToContainerPoint([-draft[0][1],draft[0][0]]),c=map.latLngToContainerPoint(e.latlng); if(f.distanceTo(c)<10){setAoi(draft.slice());return}}
+    draft.push(p); if(draftLayer)map.removeLayer(draftLayer); draftLayer=L.polyline(draft.map(q=>[-q[1],q[0]]),{color:'#ffd400',weight:2}).addTo(map);}});
+map.on('dblclick',()=>{ if(mode==='poly'&&draft.length>=3) setAoi(draft.slice()); });
+
+const rowCol={regular:'#1f77ff',disrupted:'#ff3b30',unassessable:'#9aa0a6'}, irCol={bare_soil:'#c8864a',vegetation:'#8bc34a',mixed:'#e0c341',unassessable:'#9aa0a6'};
+const pt=(f,ll,o)=>L.circleMarker(ll,o);
+$('run').onclick=async()=>{
+  $('run').disabled=true; $('log').hidden=false; $('log').textContent=''; $('res').innerHTML=''; $('dl').hidden=true;
+  resLayers.forEach(l=>{map.removeLayer(l);ctl.removeLayer(l)}); resLayers=[];
+  const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:IMG.id,aoi,start,options:{roles:[$('rFarmer').checked&&'farmer',$('rInsp').checked&&'inspector'].filter(Boolean),turn_radius:+$('turnR').value||0,farmer_lanes:$('lanes').value,max_minutes:+$('maxMin').value||null}})});
+  if(!r.ok){$('log').textContent='Error: '+await r.text();$('run').disabled=false;return}
+  const {job}=await r.json(); let n=0;
+  const poll=async()=>{ const s=await (await fetch(`/api/job/${job}?since=${n}`)).json(); n=s.n;
+    if(s.log.length){$('log').textContent+=s.log.join('\n')+'\n';$('log').scrollTop=1e9}
+    if(s.status==='running') return setTimeout(poll,1000);
+    $('run').disabled=false; if(s.status==='error'){$('res').innerHTML=`<p class="err">Model failed: ${s.error}</p>`;return}
+    show(s.result); };
+  poll();
+};
+function add(name,layer,on=true){ if(on)layer.addTo(map); ctl.addOverlay(layer,name); resLayers.push(layer); return layer;}
+function show(R){
+  const Ly=R.layers;
+  add('Inter-row areas',L.geoJSON(Ly.interrow_area,{style:f=>({color:irCol[f.properties.interrow_cover],weight:.5,fillOpacity:.35}),onEachFeature:(f,l)=>l.bindPopup(`inter-row · ${f.properties.vineyard_id}<br>cover: ${f.properties.interrow_cover}`)}));
+  add('Canopies',L.geoJSON(Ly.vineyard,{style:{color:'#39d353',weight:1,fillOpacity:.5},onEachFeature:(f,l)=>l.bindPopup(`canopy · ${f.properties.vineyard_id} · ${f.properties.row_id}`)}));
+  add('Row axes',L.geoJSON(Ly.row,{style:f=>({color:rowCol[f.properties.row_structure],weight:2}),onEachFeature:(f,l)=>l.bindPopup(`<b>${f.properties.row_id}</b><br>${fmt(f.properties.length_m,1)} m · ${f.properties.row_structure}`)}));
+  add('Blocks',L.geoJSON(Ly.blocks,{style:{color:'#fff',weight:1.5,dashArray:'5 4',fill:false},onEachFeature:(f,l)=>l.bindTooltip(f.properties.vineyard_id)}));
+  add('Waste',L.geoJSON(Ly.waste,{style:{color:'#ff00ff',weight:2,fill:false},onEachFeature:(f,l)=>l.bindPopup(`waste ${f.properties.waste_id}`)}));
+  add('Inspection points',L.geoJSON(Ly.inspection,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:5,color:'#fff',weight:1.5,fillColor:'#ff9800',fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(`${f.properties.inspection_id}: gap ${fmt(f.properties.gap_m,1)} m<br>${f.properties.row_id}`)}));
+  const RO=R.roles||{}, F=RO.farmer, I=RO.inspector;
+  const gstyle=c=>({pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:3,color:c,weight:1,fillColor:'#fff',fillOpacity:1}),style:f=>({color:c,weight:f.properties.kind==='work'?1.5:1,dashArray:f.properties.kind==='work'?null:'3 3',opacity:.8}),onEachFeature:(f,l)=>l.bindTooltip(`${f.properties.element} ${f.properties.id} · ${f.properties.kind}${f.properties.length_m?' · '+fmt(f.properties.length_m,1)+' m':''}`)});
+  if(F){add('Farmer graph (nodes + edges)',L.geoJSON(F.graph,gstyle('#6fb6ff')),false); add('Farmer route',L.geoJSON(F.route,{style:{color:'#0a84ff',weight:3.5,opacity:.9}}));}
+  if(I){add('Inspector graph (stops + legs)',L.geoJSON(I.graph,gstyle('#e0a100')),false); add('Inspector route',L.geoJSON(I.route,{style:{color:'#ffd400',weight:4}}));}
+  const S=R.summary;
+  let h=`<div class="kpis">
+   <div class="kpi"><b>${S.blocks} / ${S.rows}</b><span>blocks / rows</span></div>
+   <div class="kpi"><b>${fmt(S.row_length_m)} m</b><span>total row length</span></div>
+   <div class="kpi"><b>${fmt(S.canopy_m2)} m²</b><span>canopy · ${fmt(S.canopies)} plants</span></div>
+   <div class="kpi"><b>${fmt(S.interrow_m2)} m²</b><span>inter-row area</span></div>
+   <div class="kpi"><b>${S.inspection}</b><span>inspection points</span></div>
+   <div class="kpi"><b>${S.waste}</b><span>waste objects</span></div>
+   ${F?`<div class="kpi farmer"><b>${fmt(F.summary.length_m)} m · ${fmt(F.summary.minutes)} min</b><span>farmer · ${F.summary.lanes_worked} inter-rows · ${F.summary.efficiency_pct} % working · ${F.summary.skip_turns} skip turns</span></div>`:''}
+   ${I?`<div class="kpi route"><b>${fmt(I.summary.length_m)} m · ${fmt(I.summary.minutes)} min</b><span>inspector · ${I.summary.n_targets}/${I.summary.reachable_targets} spots · ${fmt(I.summary.outside_passable_pct,2)} % off paths</span></div>`:''}</div>
+   <div class="legend"><span><i class="sw" style="background:#39d353"></i>canopy</span><span><i class="sw" style="background:#1f77ff"></i>row regular</span><span><i class="sw" style="background:#ff3b30"></i>row disrupted</span><span><i class="sw" style="background:#c8864a"></i>bare soil</span><span><i class="sw" style="background:#8bc34a"></i>vegetation</span><span><i class="sw" style="background:#ff9800"></i>inspection</span><span><i class="sw" style="background:#ff00ff"></i>waste</span><span><i class="sw" style="background:#0a84ff"></i>farmer</span><span><i class="sw" style="background:#ffd400"></i>inspector</span></div>
+   <div class="rtabs">${F?'<button data-r="farmer">Farmer instructions</button>':''}${I?'<button data-r="inspector">Inspector instructions</button>':''}</div><div id="rbody"></div>
+   <p class="hint">Processed in ${S.seconds} s.</p>`;
+  if(!F&&!I) h+='<p class="hint">No vineyard rows found in this area, so no routes.</p>';
+  $('res').innerHTML=h; $('dl').href=R.download; $('dl').hidden=false;
+  const hlc=cs=>{if(hl)map.removeLayer(hl); hl=L.featureGroup(cs.filter(c=>c.length>1).map(c=>L.polyline(c.map(p=>[p[1],p[0]]),{color:'#00e5ff',weight:7,opacity:.9}))).addTo(map); if(hl.getLayers().length) map.fitBounds(hl.getBounds().pad(.4));};
+  const tab=r=>{document.querySelectorAll('.rtabs button').forEach(b=>b.classList.toggle('sel',b.dataset.r===r)); let b='';
+    if(r==='farmer'){ b=`<p class="hint">${F.summary.solver}. Work ${fmt(F.summary.work_m)} m, turns ${fmt(F.summary.turn_m)} m, transfers ${fmt(F.summary.transfer_m)} m.</p><ol class="steps">`+F.steps.map((s,j)=>`<li class="${s.kind}" data-f="${j}">${s.text}</li>`).join('')+'</ol>'; }
+    else { b=`<table class="chk"><thead><tr><th>#</th><th>spot</th><th>what to check</th></tr></thead><tbody>`+I.checklist.map((c,j)=>`<tr data-c="${j}"><td>${c.order}</td><td>${c.id}</td><td>${c.what_to_check}</td></tr>`).join('')+'</tbody></table><h4 style="margin:10px 0 2px">Turn-by-turn</h4>';
+      I.instructions.forEach((g,i)=>{ b+=`<div class="leg"><div class="hd" data-leg="${i}"><span>${g.leg}. ${g.frm} → ${g.to==='START'?'start':g.to}</span><span>${fmt(g.length_m)} m</span></div><ol>`+g.steps.map((s,j)=>`<li data-leg="${i}" data-step="${j}">${s.text}</li>`).join('')+`</ol><div class="arrive">➜ ${g.arrive}</div></div>`;}); }
+    $('rbody').innerHTML=b;};
+  document.querySelectorAll('.rtabs button').forEach(b=>b.onclick=()=>tab(b.dataset.r));
+  if(F||I) tab(F?'farmer':'inspector');
+  $('res').onclick=e=>{const f=e.target.closest('[data-f]'); if(f){hlc([F.steps[+f.dataset.f].coords]);return}
+    const c=e.target.closest('[data-c]'); if(c){const k=I.checklist[+c.dataset.c]; const leg=I.instructions.find(g=>g.to===k.id)||I.instructions[k.stop-1]; if(leg) hlc(leg.steps.map(s=>s.coords)); return}
+    const t=e.target.closest('[data-leg]'); if(!t)return; const g=I.instructions[+t.dataset.leg];
+    hlc(t.dataset.step!=null?[g.steps[+t.dataset.step].coords]:g.steps.map(s=>s.coords));};
+}
+</script>
+<style>
+:root{--bg:#f5f6f3;--panel:#fff;--ink:#1c2220;--mute:#67716b;--line:#e0e4de;--acc:#2f6f3e;--acc2:#e0a100;--err:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);display:flex;height:100vh}
+#side{width:410px;min-width:330px;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:14px 16px 30px}
+#map{flex:1;background:#222}
+h1{font-size:18px;margin:0 0 2px} .sub{color:var(--mute);font-size:12px;margin-bottom:10px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.step h3{margin:0 0 6px;font-size:13px;display:flex;gap:8px;align-items:center}
+.num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px}
+.step.off{opacity:.45;pointer-events:none}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button.on{background:var(--acc2);border-color:var(--acc2);color:#1c2220}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+input[type=number]{width:80px;padding:5px;border:1px solid var(--line);border-radius:6px;font:inherit}
+.hint{font-size:12px;color:var(--mute);margin-top:6px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.kpi b{display:block;font-size:16px;font-variant-numeric:tabular-nums} .kpi span{font-size:11px;color:var(--mute);text-transform:uppercase}
+.kpi.route{grid-column:1/3;background:#fffaf0;border-color:#e8c46a}
+#log{font:11.5px/1.35 ui-monospace,Consolas,monospace;background:#f3f4f1;border-radius:6px;padding:6px 8px;max-height:150px;overflow:auto;white-space:pre-wrap;margin-top:8px}
+.leg{border-top:1px solid var(--line);padding:6px 0}
+.leg .hd{font-weight:600;cursor:pointer;display:flex;justify-content:space-between}
+.leg ol{margin:4px 0 2px 18px;padding:0} .leg li{cursor:pointer;margin:2px 0} .leg li:hover{color:var(--acc)}
+.arrive{font-size:12.5px;color:#7a4b00;margin:2px 0 0}
+.err{color:var(--err)}
+.opts{display:grid;gap:5px;font-size:12.5px;margin-bottom:8px}.opts select{font:inherit;padding:3px;border:1px solid var(--line);border-radius:6px}
+.rtabs{display:flex;gap:4px;margin:12px 0 4px}.rtabs button{flex:1}.rtabs button.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.kpi.farmer{grid-column:1/3;background:#eef6ff;border-color:#9cc8ff}
+.steps{margin:4px 0 0 18px;padding:0}.steps li{margin:2px 0;cursor:pointer}.steps li:hover{color:var(--acc)} .steps li.work{color:#0a5bd3}
+table.chk{width:100%;border-collapse:collapse;font-size:12px}table.chk td,table.chk th{border-bottom:1px solid var(--line);padding:3px 4px;text-align:left;vertical-align:top}
+table.chk tr{cursor:pointer}
+.legend{font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+a{color:var(--acc)}
+@media (max-width:760px){body{flex-direction:column}#side{width:100%;height:50vh}#map{height:50vh}}
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>Vineyard model test</h1>
+  <div class="sub">Run the Sireț3 model on any image: pick the area, the start point, get the map and the walking instructions. <a href="/">← Sireț3 result map</a></div>
+
+  <div class="step" id="s1">
+    <h3><span class="num">1</span>Image</h3>
+    <div class="row">
+      <input type="file" id="file" accept=".tif,.tiff,.jpg,.jpeg,.png">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label>Ground resolution (only for JPG/PNG) <input type="number" id="gsd" value="0.03" step="0.005" min="0.005"> m/px</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="up" class="pri">Upload</button>
+      <span style="color:var(--mute)">or</span>
+      <button id="sample">Load Sireț3 sample (205 × 205 m)</button>
+    </div>
+    <div class="hint" id="imginfo">GeoTIFF keeps its georeference (lat/lon images are converted to UTM). Best results at 2–5 cm/px.</div>
+  </div>
+
+  <div class="step off" id="s2">
+    <h3><span class="num">2</span>Area to check</h3>
+    <div class="row"><button id="drawArea">Draw area</button><button id="rectArea">Rectangle</button><button id="wholeArea">Whole image</button><button id="clearArea">Clear</button></div>
+    <div class="hint">Polygon: click corners, double-click (or click the first point) to close. Rectangle: click two opposite corners.</div>
+  </div>
+
+  <div class="step off" id="s3">
+    <h3><span class="num">3</span>Start point</h3>
+    <div class="row"><button id="setStart">Click start on map</button><span id="startInfo" class="hint"></span></div>
+  </div>
+
+  <div class="step off" id="s4">
+    <h3><span class="num">4</span>Run the model</h3>
+    <div class="opts">
+      <label><input type="checkbox" id="rFarmer" checked> <b style="color:#0a84ff">Farmer</b> route: work every inter-row</label>
+      <label><input type="checkbox" id="rInsp" checked> <b style="color:#b8860b">Inspector</b> route: visit gaps + waste</label>
+      <label>Farmer turning radius <input type="number" id="turnR" value="0" step="0.5" min="0"> m <span class="hint">(0 = on foot, 3-5 = tractor)</span></label>
+      <label>Farmer lanes <select id="lanes"><option value="all">every inter-row</option><option value="cover">every 2nd (reach each row once)</option></select></label>
+      <label>Inspector time budget <input type="number" id="maxMin" placeholder="none" min="1"> min</label>
+    </div>
+    <div class="row"><button id="run" class="pri">Run model + plan routes</button><a id="dl" href="#" hidden>Download results (.zip)</a></div>
+    <div id="log" hidden></div>
+    <div id="res"></div>
+  </div>
+</div>
+<div id="map"></div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(x,d=0)=>x==null||isNaN(x)?'–':Number(x).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const map=L.map('map',{crs:L.CRS.Simple,minZoom:-5,maxZoom:5,zoomSnap:.25,attributionControl:false,doubleClickZoom:false});
+let IMG=null,imgLayer=null,aoi=null,aoiLayer=null,start=null,startMk=null,mode=null,draft=[],draftLayer=null,resLayers=[],hl=null;
+const ctl=L.control.layers(null,{}, {collapsed:false}).addTo(map);
+function unlock(){['s2','s3','s4'].forEach((s,i)=>$(s).classList.toggle('off', !IMG || (i>=1&&!aoi) || (i>=2&&!start)));}
+function setMode(m){mode=m;['drawArea','rectArea','setStart'].forEach(b=>$(b).classList.toggle('on',(m==='poly'&&b==='drawArea')||(m==='rect'&&b==='rectArea')||(m==='start'&&b==='setStart')));map.getContainer().style.cursor=m?'crosshair':'';draft=[];if(draftLayer){map.removeLayer(draftLayer);draftLayer=null}}
+function showImage(info){
+  IMG=info; [imgLayer,aoiLayer,startMk,...resLayers].forEach(l=>l&&map.removeLayer(l)); resLayers.forEach(l=>ctl.removeLayer(l)); resLayers=[]; aoi=null;start=null;
+  const b=[[-info.preview_h,0],[0,info.preview_w]];
+  imgLayer=L.imageOverlay(`/api/image/${info.id}/preview.jpg`,b).addTo(map); map.fitBounds(b);
+  $('imginfo').innerHTML=`<b>${info.kind}</b> · ${info.width}×${info.height} px · ${fmt(info.gsd_m*100,1)} cm/px · ${fmt(info.size_m[0])}×${fmt(info.size_m[1])} m<br>${info.crs}`;
+  $('res').innerHTML='';$('dl').hidden=true;$('log').hidden=true; unlock();
+}
+$('up').onclick=async()=>{const f=$('file').files[0]; if(!f){alert('Choose an image file first');return}
+  const fd=new FormData(); fd.append('file',f); fd.append('gsd',$('gsd').value); $('imginfo').textContent='Uploading and reading the image…';
+  const r=await fetch('/api/upload',{method:'POST',body:fd}); const j=await r.json(); if(j.error){$('imginfo').innerHTML=`<span class="err">${j.error}</span>`;return} showImage(j);};
+$('sample').onclick=async()=>{$('imginfo').textContent='Cutting a sample from the Sireț3 tiles…'; const r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); showImage(await r.json());};
+function setAoi(pts){ if(aoiLayer)map.removeLayer(aoiLayer); aoi=pts; aoiLayer=L.polygon(pts.map(p=>[-p[1],p[0]]),{color:'#ffd400',weight:2,fillOpacity:.08,dashArray:'6 4'}).addTo(map); setMode(null); unlock();}
+$('drawArea').onclick=()=>setMode('poly'); $('rectArea').onclick=()=>setMode('rect'); $('setStart').onclick=()=>setMode('start');
+$('wholeArea').onclick=()=>{const w=IMG.preview_w,h=IMG.preview_h;setAoi([[0,0],[w,0],[w,h],[0,h]])};
+$('clearArea').onclick=()=>{if(aoiLayer)map.removeLayer(aoiLayer);aoi=null;unlock()};
+map.on('click',e=>{ if(!mode||!IMG)return; const p=[e.latlng.lng,-e.latlng.lat];
+  if(mode==='start'){ start=p; if(startMk)map.removeLayer(startMk); startMk=L.marker(e.latlng).addTo(map).bindTooltip('Start / finish',{permanent:true,direction:'top'}); $('startInfo').textContent='set ✓'; setMode(null); unlock(); return;}
+  if(mode==='rect'){ draft.push(p); if(draft.length===2){const[a,b]=draft; setAoi([[a[0],a[1]],[b[0],a[1]],[b[0],b[1]],[a[0],b[1]]]);} return;}
+  if(mode==='poly'){ if(draft.length>2){const f=map.latLngToContainerPoint([-draft[0][1],draft[0][0]]),c=map.latLngToContainerPoint(e.latlng); if(f.distanceTo(c)<10){setAoi(draft.slice());return}}
+    draft.push(p); if(draftLayer)map.removeLayer(draftLayer); draftLayer=L.polyline(draft.map(q=>[-q[1],q[0]]),{color:'#ffd400',weight:2}).addTo(map);}});
+map.on('dblclick',()=>{ if(mode==='poly'&&draft.length>=3) setAoi(draft.slice()); });
+
+const rowCol={regular:'#1f77ff',disrupted:'#ff3b30',unassessable:'#9aa0a6'}, irCol={bare_soil:'#c8864a',vegetation:'#8bc34a',mixed:'#e0c341',unassessable:'#9aa0a6'};
+const pt=(f,ll,o)=>L.circleMarker(ll,o);
+$('run').onclick=async()=>{
+  $('run').disabled=true; $('log').hidden=false; $('log').textContent=''; $('res').innerHTML=''; $('dl').hidden=true;
+  resLayers.forEach(l=>{map.removeLayer(l);ctl.removeLayer(l)}); resLayers=[];
+  const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:IMG.id,aoi,start,options:{roles:[$('rFarmer').checked&&'farmer',$('rInsp').checked&&'inspector'].filter(Boolean),turn_radius:+$('turnR').value||0,farmer_lanes:$('lanes').value,max_minutes:+$('maxMin').value||null}})});
+  if(!r.ok){$('log').textContent='Error: '+await r.text();$('run').disabled=false;return}
+  const {job}=await r.json(); let n=0;
+  const poll=async()=>{ const s=await (await fetch(`/api/job/${job}?since=${n}`)).json(); n=s.n;
+    if(s.log.length){$('log').textContent+=s.log.join('\n')+'\n';$('log').scrollTop=1e9}
+    if(s.status==='running') return setTimeout(poll,1000);
+    $('run').disabled=false; if(s.status==='error'){$('res').innerHTML=`<p class="err">Model failed: ${s.error}</p>`;return}
+    show(s.result); };
+  poll();
+};
+function add(name,layer,on=true){ if(on)layer.addTo(map); ctl.addOverlay(layer,name); resLayers.push(layer); return layer;}
+function show(R){
+  const Ly=R.layers;
+  add('Inter-row areas',L.geoJSON(Ly.interrow_area,{style:f=>({color:irCol[f.properties.interrow_cover],weight:.5,fillOpacity:.35}),onEachFeature:(f,l)=>l.bindPopup(`inter-row · ${f.properties.vineyard_id}<br>cover: ${f.properties.interrow_cover}`)}));
+  add('Canopies',L.geoJSON(Ly.vineyard,{style:{color:'#39d353',weight:1,fillOpacity:.5},onEachFeature:(f,l)=>l.bindPopup(`canopy · ${f.properties.vineyard_id} · ${f.properties.row_id}`)}));
+  add('Row axes',L.geoJSON(Ly.row,{style:f=>({color:rowCol[f.properties.row_structure],weight:2}),onEachFeature:(f,l)=>l.bindPopup(`<b>${f.properties.row_id}</b><br>${fmt(f.properties.length_m,1)} m · ${f.properties.row_structure}`)}));
+  add('Blocks',L.geoJSON(Ly.blocks,{style:{color:'#fff',weight:1.5,dashArray:'5 4',fill:false},onEachFeature:(f,l)=>l.bindTooltip(f.properties.vineyard_id)}));
+  add('Waste',L.geoJSON(Ly.waste,{style:{color:'#ff00ff',weight:2,fill:false},onEachFeature:(f,l)=>l.bindPopup(`waste ${f.properties.waste_id}`)}));
+  add('Inspection points',L.geoJSON(Ly.inspection,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:5,color:'#fff',weight:1.5,fillColor:'#ff9800',fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(`${f.properties.inspection_id}: gap ${fmt(f.properties.gap_m,1)} m<br>${f.properties.row_id}`)}));
+  add('Walking route',L.geoJSON(R.route,{style:{color:'#ffd400',weight:4}}));
+  const S=R.summary;
+  let h=`<div class="kpis">
+   <div class="kpi"><b>${S.blocks} / ${S.rows}</b><span>blocks / rows</span></div>
+   <div class="kpi"><b>${fmt(S.row_length_m)} m</b><span>total row length</span></div>
+   <div class="kpi"><b>${fmt(S.canopy_m2)} m²</b><span>canopy · ${fmt(S.canopies)} plants</span></div>
+   <div class="kpi"><b>${fmt(S.interrow_m2)} m²</b><span>inter-row area</span></div>
+   <div class="kpi"><b>${S.inspection}</b><span>inspection points</span></div>
+   <div class="kpi"><b>${S.waste}</b><span>waste objects</span></div>
+   <div class="kpi route"><b>${fmt(S.route_m)} m · ${fmt(S.walk_min)} min</b><span>route through ${S.targets} targets, back to start${S.unreachable.length?` · ${S.unreachable.length} unreachable`:''}</span></div></div>
+   <div class="legend"><span><i class="sw" style="background:#39d353"></i>canopy</span><span><i class="sw" style="background:#1f77ff"></i>row regular</span><span><i class="sw" style="background:#ff3b30"></i>row disrupted</span><span><i class="sw" style="background:#c8864a"></i>bare soil</span><span><i class="sw" style="background:#8bc34a"></i>vegetation</span><span><i class="sw" style="background:#ff9800"></i>inspection</span><span><i class="sw" style="background:#ff00ff"></i>waste</span><span><i class="sw" style="background:#ffd400"></i>route</span></div>
+   <h3 style="margin:14px 0 4px;font-size:14px">Walking instructions</h3>`;
+  if(!R.instructions.length) h+='<p class="hint">No targets found in this area.</p>';
+  R.instructions.forEach((g,i)=>{ h+=`<div class="leg"><div class="hd" data-leg="${i}"><span>${g.leg}. ${g.frm} → ${g.to==='START'?'start':g.to}</span><span>${fmt(g.length_m)} m</span></div><ol>`+
+     g.steps.map((s,j)=>`<li data-leg="${i}" data-step="${j}">${s.text}</li>`).join('')+`</ol><div class="arrive">➜ ${g.arrive}</div></div>`;});
+  h+=`<p class="hint">Processed in ${S.seconds} s.</p>`;
+  $('res').innerHTML=h; $('dl').href=R.download; $('dl').hidden=false;
+  $('res').onclick=e=>{const t=e.target.closest('[data-leg]'); if(!t)return; const g=R.instructions[+t.dataset.leg];
+    const cs=t.dataset.step!=null?[g.steps[+t.dataset.step].coords]:g.steps.map(s=>s.coords); if(hl)map.removeLayer(hl);
+    hl=L.featureGroup(cs.map(c=>L.polyline(c.map(p=>[p[1],p[0]]),{color:'#00e5ff',weight:7,opacity:.9}))).addTo(map); if(cs.length&&cs[0].length) map.fitBounds(hl.getBounds().pad(.4));};
+}
+</script>
+</body>
+</html>

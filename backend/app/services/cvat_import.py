@@ -57,38 +57,40 @@ def tile_bounds_local(tile_name: str) -> tuple[float, float, float, float]:
 
 
 def from_pixel_detection(tile_name: str, pixel_result: dict, source: str) -> dict[str, Any]:
-    """Converts app.services.classical_cv.process_tile()'s pixel-space
-    output into our internal per-tile format (local-plane coords) — the
-    live counterpart to _parse_cvat_file, for a tile detected on the fly
-    (upload) rather than parsed from a CVAT XML on disk."""
-    canopies = []
-    for c in pixel_result["canopies"]:
-        ring = _pixel_ring_to_local(tile_name, c["points"])
+    """Converts pixel-space detections into our internal per-tile format
+    (local-plane coords) — the live counterpart to _parse_cvat_file, for a
+    tile detected on the fly rather than parsed from a CVAT XML on disk.
+    Takes app.services.classical_cv.process_tile()'s output or a model
+    service /v1/detect tile payload (same shape plus `waste` boxes and a
+    `confidence` per object); every attribute besides geometry is kept."""
+
+    def attrs(obj: dict, *geometry_keys: str) -> dict:
+        return {k: v for k, v in obj.items() if k not in geometry_keys}
+
+    def ring_of(points: list) -> list[list[float]]:
+        ring = _pixel_ring_to_local(tile_name, [tuple(p) for p in points])
         if ring[0] != ring[-1]:
             ring.append(ring[0])
-        canopies.append({"polygon": ring, "vineyard_id": c["vineyard_id"]})
+        return ring
 
-    rows = []
-    for r in pixel_result["rows"]:
-        rows.append(
+    canopies = [{"polygon": ring_of(c["points"]), **attrs(c, "points")} for c in pixel_result["canopies"]]
+    rows = [
+        {
+            "line": _pixel_ring_to_local(tile_name, [tuple(p) for p in r["points"]]),
+            **attrs(r, "points"),
+        }
+        for r in pixel_result["rows"]
+    ]
+    interrows = [
+        {"polygon": ring_of(ir["points"]), **attrs(ir, "points")} for ir in pixel_result["interrows"]
+    ]
+    waste = []
+    for w in pixel_result.get("waste", []):
+        xtl, ytl, xbr, ybr = w["bbox"]
+        waste.append(
             {
-                "line": _pixel_ring_to_local(tile_name, r["points"]),
-                "vineyard_id": r["vineyard_id"],
-                "row_id": r["row_id"],
-                "row_structure": r["row_structure"],
-            }
-        )
-
-    interrows = []
-    for ir in pixel_result["interrows"]:
-        ring = _pixel_ring_to_local(tile_name, ir["points"])
-        if ring[0] != ring[-1]:
-            ring.append(ring[0])
-        interrows.append(
-            {
-                "polygon": ring,
-                "vineyard_id": ir["vineyard_id"],
-                "interrow_cover": ir["interrow_cover"],
+                "bbox": ring_of([(xtl, ytl), (xbr, ytl), (xbr, ybr), (xtl, ybr)]),
+                **attrs(w, "bbox"),
             }
         )
 
@@ -96,7 +98,7 @@ def from_pixel_detection(tile_name: str, pixel_result: dict, source: str) -> dic
         "canopies": canopies,
         "rows": rows,
         "interrows": interrows,
-        "waste": [],
+        "waste": waste,
         "bounds": tile_bounds_local(tile_name),
         "source": source,
     }

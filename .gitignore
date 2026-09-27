@@ -48,3 +48,9 @@ frontend/tsconfig.tsbuildinfo
 
 # --- Logs -------------------------------------------------------------------
 *.log
+
+# --- Model service (model-service/) --------------------------------------
+# Sample tile and optional U-Net weights from the model team's drop — the
+# service image doesn't use them (CIVE mode, see MODEL_SERVICE.md).
+model-service/examples/*.tif
+model-service/model/*.pth
