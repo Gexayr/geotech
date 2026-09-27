@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { api } from "../api/client";
 
-const MAX_FILES = 5;
+const MAX_FILES = 10;
 
 interface UploadResult {
   filename: string;

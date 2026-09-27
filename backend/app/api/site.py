@@ -87,7 +87,7 @@ def list_tiles() -> list[dict]:
     ]
 
 
-MAX_UPLOAD_FILES = 5
+MAX_UPLOAD_FILES = 10
 MAX_UPLOAD_MB = 50
 
 
