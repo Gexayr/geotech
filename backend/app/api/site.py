@@ -67,6 +67,12 @@ def _tiles() -> dict:
 # whenever `_model_tiles()` returns None.
 
 _model_cache: dict | None = None  # tile -> internal per-tile data, from /v1/detect
+# Whole-site routes per role (farmer: 196 targets, ~400 s; auditor: ~130 s),
+# planned offline with the model's own planner — past a request's timeout
+# and the service's 80-target HTTP cap. Served as the unscoped default
+# route; the farmer one is the submitted route.geojson (README "Submission").
+SITE_ROUTE_DIR = real_site.ASSETS_DIR.parent
+
 # Routes take the service ~45-60 s — keep each answer until tiles change.
 _route_cache: dict[str, dict] = {}
 _route_lock = threading.Lock()
@@ -125,6 +131,9 @@ def _model_route(
     """A cached model-service route, or None to fall back to ours."""
     if _model_tiles() is None:
         return None
+    site_route = SITE_ROUTE_DIR / f"site_route_{role}.json"
+    if not (tiles or area_local or start_local) and site_route.exists():
+        return _route_from_model(json.loads(site_route.read_text(encoding="utf-8")))
     key = json.dumps([role, tiles, area_local, start_local])
     with _route_lock:
         if key in _route_cache:
