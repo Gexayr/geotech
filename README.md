@@ -4,6 +4,67 @@ DeepTech GigaHack 2026, 25–27 Sept, Chișinău. Deadline: **Sun 27 Sept, 15:00
 (Chișinău time)**. Official rules/annotation/scoring PDFs: `03_docs/` (from
 the organizer assets archive).
 
+## Submission: from tiles to `route.geojson` and `measurements.csv`
+
+Both files at the repo root were produced on our server from **all 311
+Sireț3 tiles** by the model service in `model-service/` (training-free
+classical CV + OR-Tools, see `model-service/MODEL_SERVICE.md`):
+
+- **`route.geojson`** — one closed `LineString` in **EPSG:32635** (declared
+  in `crs`), starting and ending exactly at the organizer's start point
+  (0.0 m), `length_m` = 6576.7. Prize-collecting TSP over authorised passages
+  and inter-rows (never through forbidden zones or rows), visiting 48 of the
+  196 derived targets (row gaps + waste); 148 targets are not reachable on
+  the passable network. 1.19 % of the length is off the passable network.
+- **`measurements.csv`** — 20 vineyards, 469 rows: row length per row;
+  canopy area, inter-row area, canopy count, row count and total row length
+  per vineyard; site totals. One `vineyard_id` per vineyard across tiles
+  (IDs are stitched site-wide by the model service).
+
+### How to reproduce
+
+```bash
+# 1. put the 311 GeoTIFF tiles here
+cp /path/to/01_tiles/siret3_*.tif backend/app/data/real/tiles/
+
+# 2. build and start the model service and the app (Docker)
+./deploy.sh --model      # geotech-model on the internal "geotech" network
+./deploy.sh --backend    # geotech-app on 127.0.0.1:9080, MODEL_URL set
+
+# 3. detection on every tile (cached per tile in the model service)
+docker exec geotech-model python -c "import glob,json,os,urllib.request as u; n=[os.path.basename(p) for p in glob.glob('/data/tiles/*.tif')]; print(json.load(u.urlopen(u.Request('http://localhost:9090/v1/detect', json.dumps({'tiles': n}).encode(), {'content-type': 'application/json'}), timeout=3000))['elapsed_s'])"
+
+# 4. measurements.csv
+curl -s localhost:9080/api/site/measurements.csv -o measurements.csv
+
+# 5. route.geojson for the whole site (no scope, farmer = gaps + waste targets)
+curl -s "localhost:9080/api/site/route.geojson?role=farmer" -o route.geojson
+```
+
+The HTTP route endpoint caps one tour at 80 targets for interactive use; the
+submitted whole-site route was planned with the same `service.store.route()`
+with that cap lifted (`store.MAX_TARGETS = 10000`, `solve_s = 120`).
+Without Docker, `model-service/README.md` §4 has the equivalent batch CLI
+(`python -m vine run <tiles folder> --start start.geojson --zones passages.geojson forbidden.geojson`).
+
+### Processing time and hardware
+
+Measured on our server: **4 vCPU Intel Broadwell @ 2.0 GHz, 3.8 GB RAM, no
+GPU**, Ubuntu 24.04, Docker, model container limited to 1.5 GB RAM.
+
+| step | time |
+|---|---|
+| detection, 311 tiles | 338 s (≈ 1.1 s per tile) |
+| measurements (all tiles) | ≈ 60 s |
+| whole-site route (196 targets) | ≈ 400 s |
+| peak RAM, model service | ≈ 600 MB |
+
+### Model weights
+
+None are needed: the pipeline is training-free and its parameters are in
+the repo (`model-service/model/vine_model_v1.json`). The optional U-Net
+canopy weights (`canopy_unet.pth`) are not used by the submitted run.
+
 ## Current state — real data, no synthetic geometry
 
 Everything below runs on the **actual challenge assets** (`02_route/`,
